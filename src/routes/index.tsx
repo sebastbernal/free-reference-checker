@@ -111,6 +111,7 @@ function toCsv(rows: ReferenceResult[]): string {
 function Index() {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
 
