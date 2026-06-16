@@ -122,8 +122,42 @@ function Index() {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
+  const [restored, setRestored] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
+
+  // Restore previous session state after mount (avoids SSR mismatch).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          text?: string;
+          results?: ReferenceResult[] | null;
+          filter?: Filter;
+        };
+        if (typeof saved.text === "string") setText(saved.text);
+        if (Array.isArray(saved.results)) setResults(saved.results);
+        if (saved.filter) setFilter(saved.filter);
+      }
+    } catch {
+      // ignore corrupt storage
+    }
+    setRestored(true);
+  }, []);
+
+  // Persist state across reloads once restored.
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ text, results, filter }),
+      );
+    } catch {
+      // ignore quota / serialization errors
+    }
+  }, [restored, text, results, filter]);
 
   const mutation = useMutation({
     mutationFn: (input: string) => checkFn({ data: { text: input } }),
