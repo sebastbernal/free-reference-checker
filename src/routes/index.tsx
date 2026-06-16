@@ -406,15 +406,29 @@ function Index() {
           </div>
         )}
 
-        <Accordion type="single" collapsible className="mt-10">
-          <AccordionItem value="how" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">
-              <span className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-primary" />
-                How it works — what happens behind the scenes
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-4 text-sm text-muted-foreground">
+        <div className="mt-10 rounded-lg border px-4">
+          <button
+            type="button"
+            onClick={() => setShowHow((v) => !v)}
+            aria-expanded={showHow}
+            aria-controls="how-it-works"
+            className="flex w-full items-center justify-between py-4 text-left text-sm font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
+              How it works — what happens behind the scenes
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                showHow ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {showHow && (
+            <div
+              id="how-it-works"
+              className="space-y-4 pb-4 text-sm text-muted-foreground"
+            >
               <p>
                 This tool tries to detect references that may have been
                 fabricated or that point to dead links. Nothing is stored on a
