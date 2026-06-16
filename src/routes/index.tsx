@@ -537,6 +537,90 @@ function Index() {
             </div>
           )}
         </div>
+
+        <div className="mt-4 rounded-lg border px-4">
+          <button
+            type="button"
+            onClick={() => setShowAbout((v) => !v)}
+            aria-expanded={showAbout}
+            aria-controls="about-credits"
+            className="flex w-full items-center justify-between py-4 text-left text-sm font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
+              About &amp; credits
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                showAbout ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {showAbout && (
+            <div
+              id="about-credits"
+              className="space-y-4 pb-4 text-sm text-muted-foreground"
+            >
+              <p>
+                Reference Checker helps you spot references that may have been
+                fabricated or that point to dead links. Every check runs live
+                against public databases and the open web — nothing you paste or
+                upload is stored on a server.
+              </p>
+
+              <div>
+                <h3 className="font-medium text-foreground">Credits</h3>
+                <ul className="ml-4 mt-1 list-disc space-y-1">
+                  <li>
+                    The academic verification approach is inspired by{" "}
+                    <a
+                      href="https://zabbonat.github.io/References-Validation/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary underline underline-offset-2"
+                    >
+                      checkifexist
+                    </a>
+                    .
+                  </li>
+                  <li>
+                    The web-page liveness and Internet Archive (Wayback) checking
+                    is an original creation by the author.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-foreground">Author &amp; license</h3>
+                <p>
+                  Built by{" "}
+                  <a
+                    href="https://www.linkedin.com/in/sebastianbernalgarcia/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary underline underline-offset-2"
+                  >
+                    Sebastian Bernal Garcia
+                  </a>
+                  . Released under the MIT License.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <footer className="mt-10 border-t pt-6 pb-2 text-center text-xs text-muted-foreground">
+          Built by{" "}
+          <a
+            href="https://www.linkedin.com/in/sebastianbernalgarcia/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-primary underline underline-offset-2"
+          >
+            Sebastian Bernal Garcia
+          </a>{" "}
+          · MIT License · 2026
+        </footer>
       </main>
     </div>
   );
