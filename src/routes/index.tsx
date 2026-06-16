@@ -177,6 +177,19 @@ function Index() {
       }
     : null;
 
+  const verdictCounts = results
+    ? results.reduce<Record<string, number>>((acc, r) => {
+        acc[r.verdict] = (acc[r.verdict] ?? 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  const filteredResults = results
+    ? filter === "all"
+      ? results
+      : results.filter((r) => r.verdict === filter)
+    : [];
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-muted/30">
