@@ -137,6 +137,7 @@ function Index() {
       return;
     }
     setResults(null);
+    setFilter("all");
     mutation.mutate(text);
   };
 
