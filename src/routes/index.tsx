@@ -303,10 +303,43 @@ function Index() {
               </Button>
             </div>
 
+            <div className="mt-4 flex flex-wrap gap-2">
+              {FILTERS.map((f) => {
+                const count =
+                  f.value === "all" ? counts.total : verdictCounts[f.value] ?? 0;
+                if (f.value !== "all" && count === 0) return null;
+                const active = filter === f.value;
+                return (
+                  <Button
+                    key={f.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(f.value)}
+                  >
+                    {f.label}
+                    <span
+                      className={
+                        active
+                          ? "ml-1 text-primary-foreground/80"
+                          : "ml-1 text-muted-foreground"
+                      }
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="mt-4 space-y-3">
-              {results!.map((r) => (
+              {filteredResults.map((r) => (
                 <ReferenceResultCard key={r.n} result={r} />
               ))}
+              {filteredResults.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No references match this filter.
+                </p>
+              )}
             </div>
 
             <p className="mt-6 text-center text-xs text-muted-foreground">
