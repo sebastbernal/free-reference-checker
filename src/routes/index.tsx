@@ -625,15 +625,34 @@ function Index() {
       </main>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-4">
-        <a
-          href="https://paypal.me/sebastbernal"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-rose-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-rose-600/30 transition-transform hover:scale-105 hover:bg-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2"
-        >
-          <Heart className="h-4 w-4 animate-pulse fill-current" />
-          Support this tool
-        </a>
+        <div className="pointer-events-auto inline-flex items-center gap-3 rounded-full bg-rose-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-rose-600/30">
+          <span className="flex items-center gap-2">
+            <Heart className="h-4 w-4 animate-pulse fill-current" />
+            Support this tool
+          </span>
+          <span className="h-5 w-px bg-white/30" aria-hidden="true" />
+          <div className="flex items-center gap-2">
+            <a
+              href="https://paypal.me/sebastbernal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full px-2 py-0.5 underline-offset-2 transition-colors hover:bg-white/15 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+            >
+              PayPal
+            </a>
+            <span className="text-white/50" aria-hidden="true">
+              ·
+            </span>
+            <a
+              href="https://buymeacoffee.com/sebastbernal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full px-2 py-0.5 underline-offset-2 transition-colors hover:bg-white/15 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+            >
+              Card
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
