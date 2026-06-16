@@ -533,9 +533,9 @@ function Index() {
                 Results are heuristic and can occasionally be wrong — always
                 double-check anything flagged before acting on it.
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
