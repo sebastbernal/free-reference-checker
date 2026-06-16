@@ -19,7 +19,20 @@ import { extractTextFromFile } from "@/lib/file-extract";
 import {
   checkReferences,
   type ReferenceResult,
+  type Verdict,
 } from "@/lib/reference-check.functions";
+
+type Filter = Verdict | "all";
+
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "real", label: "Real" },
+  { value: "check", label: "Check" },
+  { value: "no-trace", label: "No trace" },
+  { value: "archived", label: "Archived" },
+  { value: "offline", label: "Offline" },
+  { value: "inconclusive", label: "Inconclusive" },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
