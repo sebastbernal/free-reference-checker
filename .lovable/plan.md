@@ -1,11 +1,21 @@
-Add a fixed donation bar at the bottom of the page linking to the user's PayPal.me.
+## Update floating support button
 
-- Add a heart icon donation button fixed to the bottom of the viewport (or a sticky footer bar) that links to https://paypal.me/sebastbernal.
-- Opens in a new tab with `rel="noopener noreferrer"` for security.
-- Uses a warm accent color (e.g., rose/pink) with a subtle pulse or hover effect to draw attention without being distracting.
-- Ensures it doesn't overlap important content on mobile — add appropriate bottom padding to the main container.
+Replace the single PayPal link in the fixed bottom bar with a layout that offers both PayPal and a card-payment option, using a generic label most users will recognise.
 
-Files to edit:
-- `src/routes/index.tsx` — add the donation button component and adjust layout padding.
+### Changes
+1. In `src/routes/index.tsx`, replace the single `<a>` PayPal button (lines 628-637) with a floating pill containing:
+   - A leading heart icon + "Support this tool" label.
+   - Two side-by-side text links:
+     - **PayPal** → `https://paypal.me/sebastbernal`
+     - **Card** → `https://buymeacoffee.com/sebastbernal` (Buy Me a Coffee accepts cards without an account; the generic label is clearer for users unfamiliar with the brand).
+   - Both links open in a new tab (`target="_blank" rel="noopener noreferrer"`).
+2. Keep the existing styling approach: rounded-full pill shape, rose-600 background, white text, shadow, hover scale, focus ring. Separate the two links with a subtle vertical divider (`border-white/30`) and a small gap.
 
-The button will say something like "Support this tool" or "Donate" with a heart icon, using lucide-react's `Heart` icon.
+### Visual approach
+```text
+[♥ Support this tool | PayPal · Card]
+```
+
+### Out of scope
+- No new packages needed.
+- No backend changes.
