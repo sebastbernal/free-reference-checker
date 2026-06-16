@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FileText,
+  Info,
   Loader2,
   ScanSearch,
   ShieldCheck,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +16,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
 import {
@@ -21,6 +29,8 @@ import {
   type ReferenceResult,
   type Verdict,
 } from "@/lib/reference-check.functions";
+
+const STORAGE_KEY = "reference-checker-state";
 
 type Filter = Verdict | "all";
 
@@ -112,8 +122,42 @@ function Index() {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
+  const [restored, setRestored] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
+
+  // Restore previous session state after mount (avoids SSR mismatch).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          text?: string;
+          results?: ReferenceResult[] | null;
+          filter?: Filter;
+        };
+        if (typeof saved.text === "string") setText(saved.text);
+        if (Array.isArray(saved.results)) setResults(saved.results);
+        if (saved.filter) setFilter(saved.filter);
+      }
+    } catch {
+      // ignore corrupt storage
+    }
+    setRestored(true);
+  }, []);
+
+  // Persist state across reloads once restored.
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ text, results, filter }),
+      );
+    } catch {
+      // ignore quota / serialization errors
+    }
+  }, [restored, text, results, filter]);
 
   const mutation = useMutation({
     mutationFn: (input: string) => checkFn({ data: { text: input } }),
@@ -164,6 +208,17 @@ function Index() {
     a.download = "reference-check.csv";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const clearAll = () => {
+    setResults(null);
+    setFilter("all");
+    setText("");
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   };
 
   const counts = results
@@ -297,10 +352,16 @@ function Index() {
                   </span>
                 )}
               </div>
-              <Button variant="outline" size="sm" onClick={downloadCsv}>
-                <FileText className="h-4 w-4" />
-                Export CSV
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={downloadCsv}>
+                  <FileText className="h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button variant="ghost" size="sm" onClick={clearAll}>
+                  <Trash2 className="h-4 w-4" />
+                  Clear
+                </Button>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -348,6 +409,123 @@ function Index() {
             </p>
           </div>
         )}
+
+        <Accordion type="single" collapsible className="mt-10">
+          <AccordionItem value="how" className="rounded-lg border px-4">
+            <AccordionTrigger className="text-sm font-medium">
+              <span className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-primary" />
+                How it works — what happens behind the scenes
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 text-sm text-muted-foreground">
+              <p>
+                This tool tries to detect references that may have been
+                fabricated or that point to dead links. Nothing is stored on a
+                server — each reference is checked live against public databases
+                when you press <span className="font-medium">Check references</span>.
+              </p>
+
+              <div>
+                <h3 className="font-medium text-foreground">1. Parsing</h3>
+                <p>
+                  Your pasted text — or the text extracted from an uploaded{" "}
+                  <code>.txt</code>, <code>.docx</code> or <code>.pdf</code> — is
+                  split into individual references. For uploaded documents, only
+                  the <span className="font-medium">References / Bibliography</span>{" "}
+                  section at the end of the document is used.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-foreground">2. Classification</h3>
+                <p>
+                  Each entry is sorted into one of three types based on what it
+                  contains:
+                </p>
+                <ul className="ml-4 mt-1 list-disc space-y-1">
+                  <li>
+                    <span className="font-medium text-foreground">Academic</span>{" "}
+                    — has a DOI or links to a scholarly source (e.g. arXiv).
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Web</span> — a
+                    regular website link with no DOI.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Offline</span>{" "}
+                    — e.g. a printed book, with no link to verify.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-foreground">3. Verification</h3>
+                <ul className="ml-4 mt-1 list-disc space-y-1">
+                  <li>
+                    <span className="font-medium text-foreground">Academic:</span>{" "}
+                    the DOI is resolved first (CrossRef, then OpenAlex). If there
+                    is no DOI, the title is searched across{" "}
+                    <span className="font-medium">
+                      CrossRef, OpenAlex, Semantic Scholar, arXiv and DBLP
+                    </span>
+                    . A title-similarity score then decides whether it is a
+                    confident match.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Web:</span> the
+                    link is fetched to confirm it is live (HTTP status). Dead
+                    links are looked up in the{" "}
+                    <span className="font-medium">Internet Archive (Wayback)</span>{" "}
+                    to see if a snapshot ever existed.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Offline:</span>{" "}
+                    flagged as not automatically verifiable.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-foreground">Verdict legend</h3>
+                <ul className="ml-4 mt-1 list-disc space-y-1">
+                  <li>
+                    <span className="font-medium text-foreground">Real</span> —
+                    confidently matched in a database or a live link.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Check</span> —
+                    found but the title only partly matches; verify manually.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">No trace</span>{" "}
+                    — unreachable and never archived; possibly fabricated.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Archived</span>{" "}
+                    — the live link is dead, but an Internet Archive snapshot
+                    exists.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Offline</span> —
+                    a source (e.g. a book) that cannot be auto-verified.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">
+                      Inconclusive
+                    </span>{" "}
+                    — the checks could not reach a clear answer.
+                  </li>
+                </ul>
+              </div>
+
+              <p className="text-xs">
+                Results are heuristic and can occasionally be wrong — always
+                double-check anything flagged before acting on it.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </main>
     </div>
   );
