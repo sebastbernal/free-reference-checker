@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FileText,
+  Info,
   Loader2,
   ScanSearch,
   ShieldCheck,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +16,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
 import {
@@ -21,6 +29,8 @@ import {
   type ReferenceResult,
   type Verdict,
 } from "@/lib/reference-check.functions";
+
+const STORAGE_KEY = "reference-checker-state";
 
 type Filter = Verdict | "all";
 
