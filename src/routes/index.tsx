@@ -19,7 +19,20 @@ import { extractTextFromFile } from "@/lib/file-extract";
 import {
   checkReferences,
   type ReferenceResult,
+  type Verdict,
 } from "@/lib/reference-check.functions";
+
+type Filter = Verdict | "all";
+
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "real", label: "Real" },
+  { value: "check", label: "Check" },
+  { value: "no-trace", label: "No trace" },
+  { value: "archived", label: "Archived" },
+  { value: "offline", label: "Offline" },
+  { value: "inconclusive", label: "Inconclusive" },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -98,6 +111,7 @@ function toCsv(rows: ReferenceResult[]): string {
 function Index() {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
 
@@ -123,6 +137,7 @@ function Index() {
       return;
     }
     setResults(null);
+    setFilter("all");
     mutation.mutate(text);
   };
 
@@ -161,6 +176,19 @@ function Index() {
         offline: results.filter((r) => r.verdict === "offline").length,
       }
     : null;
+
+  const verdictCounts = results
+    ? results.reduce<Record<string, number>>((acc, r) => {
+        acc[r.verdict] = (acc[r.verdict] ?? 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  const filteredResults = results
+    ? filter === "all"
+      ? results
+      : results.filter((r) => r.verdict === filter)
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -275,10 +303,43 @@ function Index() {
               </Button>
             </div>
 
+            <div className="mt-4 flex flex-wrap gap-2">
+              {FILTERS.map((f) => {
+                const count =
+                  f.value === "all" ? counts.total : verdictCounts[f.value] ?? 0;
+                if (f.value !== "all" && count === 0) return null;
+                const active = filter === f.value;
+                return (
+                  <Button
+                    key={f.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(f.value)}
+                  >
+                    {f.label}
+                    <span
+                      className={
+                        active
+                          ? "ml-1 text-primary-foreground/80"
+                          : "ml-1 text-muted-foreground"
+                      }
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="mt-4 space-y-3">
-              {results!.map((r) => (
+              {filteredResults.map((r) => (
                 <ReferenceResultCard key={r.n} result={r} />
               ))}
+              {filteredResults.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No references match this filter.
+                </p>
+              )}
             </div>
 
             <p className="mt-6 text-center text-xs text-muted-foreground">
