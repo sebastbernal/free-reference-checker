@@ -1,84 +1,35 @@
-# Reference Checker — web tool
+## Goal
 
-A single-page tool that takes a pasted or uploaded reference list, verifies each
-entry, and shows a **verdict card per reference** on the page (no CSV required,
-with an optional export button). It combines the academic verification of
-CheckIfExist (CrossRef + Semantic Scholar + OpenAlex + arXiv + DBLP) with the web-link
-checking from your Python script (live HTTP status + Wayback fallback).
+When a document is uploaded (.txt / .docx / .pdf), only feed the **References section** into the checker — not the whole body text. References sit at the end of a document under a heading like "References", "Bibliography", or "Works Cited". Right now the full document text is dumped into the textarea, so body paragraphs get mistakenly parsed as references.
 
-## What it does, per reference
+## Change (frontend extraction only)
 
-1. **Parse** the pasted/extracted text into individual references (rejoins
-   wrapped lines, strips trailing source tags, repairs split URLs) — ported from
-   your Python `parse_references`.
-2. **Classify** each as **academic** (has DOI or looks like a paper),
-   **web** (has a URL, no DOI), or **offline** (book / no link).
-3. **Academic check** — look up across CrossRef, Semantic Scholar, OpenAlex,
-   arXiv, and DBLP. A DOI is resolved directly; otherwise the title is searched.
-   Compares the cited title against the matched title (similarity score) and flags
-   mismatches.
-4. **Web check** — HEAD/GET the URL for a live status; if dead/errored, query the
-   Wayback Machine for a historical snapshot.
-5. **Verdict** — one clear status per reference:
-   - `Real` (academic match found, or web page live)
-   - `Check` (DOI/title not found, or title mismatch — possibly fabricated)
-   - `Dead link, but archived` (web page down but Wayback snapshot exists)
-   - `No trace` (web page down and never archived — likely fabricated)
-   - `Offline source` (book — cannot auto-verify)
+Add a `sliceReferencesSection(text)` helper in `src/lib/file-extract.ts` and apply it inside `extractTextFromFile` right before returning, for all three file types. Paste input is left untouched (the user pastes references directly).
 
-## Result presentation (on-page cards, lean)
+### Detection logic
 
-Each reference renders a card showing:
-- Status badge (color-coded: green Real / amber Check / red No trace / grey Offline)
-- The original reference text
-- Type (academic / web / offline)
-- Which source confirmed it (e.g. "Found in OpenAlex") + matched title
-- For web: HTTP status + archive result
-- Short notes / reason for the verdict
+1. Scan the extracted text line by line.
+2. A line is a **references heading** when its trimmed text — after stripping leading section numbering (e.g. `7.`, `6.1`, `IV.`) and a trailing colon — case-insensitively equals one of:
+   - `References`, `Reference`, `Reference List`
+   - `Bibliography`
+   - `Works Cited`, `Literature Cited`
+   - `References and Notes`
+   - `Citations`
+   The whole line must be short (just the keyword, not a sentence) so in-text mentions like "see the references in…" are ignored.
+3. Use the **last** matching heading in the document (references appear near the end; this avoids a table-of-contents entry near the top).
+4. Take everything **after** that heading line to the end of the document.
+5. If a later heading such as `Appendix`, `Appendices`, `Notes`, or `About the author(s)` appears after the references heading, cut the slice off there (so trailing non-reference matter is dropped).
+6. **Fallback:** if no references heading is found, return the full extracted text unchanged (current behaviour), so nothing breaks for files that are already just a reference list.
 
-A summary bar at the top counts totals (e.g. "12 checked · 9 real · 3 flagged").
-An optional **Export** button downloads the results as a CSV/JSON report.
+### PDF note
 
-## Inputs
+PDF extraction currently joins each page's items with spaces and pages with `\n`, so headings may not sit on their own line. The slice will run on the same text; the line-based heading test still works for `.txt`/`.docx`. For PDFs the helper will additionally match the keyword as a standalone token boundary within the text (last occurrence) when no line-based match exists, then slice from there.
 
-- **Paste text** into a textarea (APA / numbered / plain references).
-- **Upload** `.txt`, `.docx`, `.pdf` — file text is extracted in the browser
-  (`.txt` read directly, `.docx` via `mammoth`, `.pdf` via `pdfjs-dist`), then the
-  plain text is sent to the checker. A "Try example" link loads sample references.
+## Out of scope
 
-## Technical design
-
-**Why server-side checks:** browser CORS blocks arbitrary URL liveness checks and
-some scholarly APIs. All network verification runs in a TanStack server function;
-the browser only does file-text extraction and rendering.
-
-- `src/lib/reference-check.functions.ts` — `createServerFn` (POST) taking the raw
-  reference text (Zod-validated: max references, max length). It parses,
-  classifies, and for each reference runs the source lookups + web checks with a
-  concurrency limit and per-item error handling, returning a plain array of
-  result DTOs. No API keys needed (all endpoints are free/open); sends a polite
-  `User-Agent`.
-- `src/lib/reference-sources.server.ts` — helper module with one function per
-  source (CrossRef, Semantic Scholar, OpenAlex, arXiv, DBLP, HTTP liveness,
-  Wayback) plus title-similarity scoring (Levenshtein + word-overlap, ported from
-  the original tool). Imported only by the server function.
-- `src/routes/index.tsx` — the page: header, paste/upload input, check button,
-  progress indicator, summary bar, and the list of verdict cards. Calls the
-  server function via `useServerFn` inside a mutation (not in a loader). Uses
-  existing shadcn `card`, `badge`, `button`, `textarea`, `progress` components.
-- `src/components/ReferenceResultCard.tsx` — the per-reference card.
-- Client file parsing util using `mammoth` + `pdfjs-dist` (added with `bun add`).
-- SEO: real `<title>`/meta/H1 for the index route.
-
-## Out of scope (for now)
-
-- Saving check history (would need a database / Lovable Cloud).
-- Citation reformatting (APA/MLA/BibTeX corrected output) — you chose the lean
-  verdict cards, so this is skipped.
-- Retraction database lookup beyond what OpenAlex/CrossRef metadata exposes.
+- No change to `reference-check.functions.ts` parsing, the source lookups, or the UI.
+- Not attempting to extract references from inside body text / footnotes — only the dedicated end section, as requested.
 
 ## Verification
 
-Run a mixed sample through the tool — a real DOI, a fabricated DOI, a real
-title-only paper, a live URL, and a dead URL — and confirm each gets the correct
-verdict and the cards render correctly in the preview.
+Test the helper against sample inputs: (a) a doc with body text + "References" heading + list, (b) "BIBLIOGRAPHY" uppercase, (c) "7. References" numbered, (d) references followed by an "Appendix", (e) a plain reference list with no heading (fallback returns all). Confirm only the reference entries remain in each case.
