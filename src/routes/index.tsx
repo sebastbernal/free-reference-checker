@@ -210,6 +210,17 @@ function Index() {
     URL.revokeObjectURL(url);
   };
 
+  const clearAll = () => {
+    setResults(null);
+    setFilter("all");
+    setText("");
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
   const counts = results
     ? {
         total: results.length,
