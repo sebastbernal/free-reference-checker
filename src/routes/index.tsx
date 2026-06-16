@@ -118,6 +118,7 @@ function Index() {
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [restored, setRestored] = useState(false);
+  const [showHow, setShowHow] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
 
