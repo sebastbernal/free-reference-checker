@@ -1,23 +1,11 @@
-# Add MIT License & Credits (with links)
+Add a fixed donation bar at the bottom of the page linking to the user's PayPal.me.
 
-## 1. LICENSE file
-Create a standard `LICENSE` file at the project root with the MIT License text, copyright `2026 Sebastian Bernal Garcia`.
+- Add a heart icon donation button fixed to the bottom of the viewport (or a sticky footer bar) that links to https://paypal.me/sebastbernal.
+- Opens in a new tab with `rel="noopener noreferrer"` for security.
+- Uses a warm accent color (e.g., rose/pink) with a subtle pulse or hover effect to draw attention without being distracting.
+- Ensures it doesn't overlap important content on mobile — add appropriate bottom padding to the main container.
 
-## 2. Footer credit (always visible)
-Add a small footer at the bottom of the home page (`src/routes/index.tsx`) showing:
-- `Built by Sebastian Bernal Garcia · MIT License · 2026`
-- `Sebastian Bernal Garcia` links to: `https://www.linkedin.com/in/sebastianbernalgarcia/`
+Files to edit:
+- `src/routes/index.tsx` — add the donation button component and adjust layout padding.
 
-## 3. Expandable "About & Credits" section
-Add a second collapsible toggle (mirroring the existing "How it works" pattern with `useState`, a button, `ChevronDown`, and `aria-expanded`/`aria-controls`) directly above the footer. When expanded it explains:
-- What the project is and that it runs all checks live with nothing stored.
-- **Credits / acknowledgements:**
-  - Academic verification approach is **inspired by checkifexist** — `checkifexist` links to `https://zabbonat.github.io/References-Validation/`
-  - Web-page liveness + Wayback checking is **an original creation by the author**.
-- Licensed under the **MIT License**.
-- Author: **Sebastian Bernal Garcia** (links to `https://www.linkedin.com/in/sebastianbernalgarcia/`).
-
-## Technical notes
-- Reuse the existing collapsible markup pattern already used for "How it works" (new `showAbout` state).
-- No new dependencies; `ChevronDown` and `Info` are already imported.
-- Only `src/routes/index.tsx` is edited; `LICENSE` is added at root.
+The button will say something like "Support this tool" or "Donate" with a heart icon, using lucide-react's `Heart` icon.
