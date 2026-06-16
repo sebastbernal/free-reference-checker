@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
+  ChevronDown,
   FileText,
   Info,
   Loader2,
@@ -16,12 +17,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
 import {
