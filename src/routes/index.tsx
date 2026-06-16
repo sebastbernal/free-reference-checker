@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
+  ChevronDown,
   FileText,
   Info,
   Loader2,
@@ -16,12 +17,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
 import {
@@ -123,6 +118,7 @@ function Index() {
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [restored, setRestored] = useState(false);
+  const [showHow, setShowHow] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
 
@@ -410,15 +406,29 @@ function Index() {
           </div>
         )}
 
-        <Accordion type="single" collapsible className="mt-10">
-          <AccordionItem value="how" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">
-              <span className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-primary" />
-                How it works — what happens behind the scenes
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-4 text-sm text-muted-foreground">
+        <div className="mt-10 rounded-lg border px-4">
+          <button
+            type="button"
+            onClick={() => setShowHow((v) => !v)}
+            aria-expanded={showHow}
+            aria-controls="how-it-works"
+            className="flex w-full items-center justify-between py-4 text-left text-sm font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
+              How it works — what happens behind the scenes
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                showHow ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {showHow && (
+            <div
+              id="how-it-works"
+              className="space-y-4 pb-4 text-sm text-muted-foreground"
+            >
               <p>
                 This tool tries to detect references that may have been
                 fabricated or that point to dead links. Nothing is stored on a
@@ -523,9 +533,9 @@ function Index() {
                 Results are heuristic and can occasionally be wrong — always
                 double-check anything flagged before acting on it.
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
