@@ -41,7 +41,6 @@ const DATE_TOKEN = String.raw`\((?:\d{4}(?!\d)[a-z]?|n\.d\.)(?:,[^)]{0,40})?\)`;
 function looksLikeStart(line: string, buffer = ""): boolean {
   const s = line.trim();
   if (!s) return false;
-
   const lower = s.toLowerCase();
   if (lower.startsWith("http") || lower.startsWith("www.")) return false;
   if (/^doi\b/i.test(s) || lower.startsWith("doi:")) return false;
@@ -141,7 +140,6 @@ function segment(raw: string): string[] {
 
   for (const rawLn of lines) {
     const ln = rawLn.trim();
-
     if (!ln) {
       sawBlankSinceContent = true;
       continue;
@@ -151,7 +149,6 @@ function segment(raw: string): string[] {
       sawBlankSinceContent = false;
       continue;
     }
-
     if (!current) {
       current = ln;
       sawBlankSinceContent = false;
@@ -221,11 +218,6 @@ function splitFusedAfterUrl(block: string): string[] {
 // A capitalised plain word with no slug punctuation is treated as trailing prose
 // (next reference / source name) and left alone.
 function rejoinWrappedUrl(block: string): string {
-  const urlStart = /(https?:\/\/[^\s]*)/;
-  // continuation fragment: a run that looks like more URL, not prose
-  const cont =
-    /^([A-Za-z0-9%][A-Za-z0-9%._~#?&=+/:-]*)/;
-
   // Walk left-to-right, repeatedly merging "url <space> fragment" while the
   // fragment qualifies as URL continuation.
   let out = block;
@@ -243,7 +235,6 @@ function rejoinWrappedUrl(block: string): string {
       /[-\/%?#=&._~]/.test(rest.split(/\s/)[0]) ||
       // or starts lowercase / digit (mid-word or path piece)
       /^[a-z0-9%]/.test(rest);
-
     if (!isContinuation) break; // prose follows the URL; stop merging here
 
     // Take only the first whitespace-delimited token of `rest` as the fragment;
@@ -267,12 +258,66 @@ function repair(block: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Run-on fallback: a single block that never got line breaks (e.g. a PDF
+// extractor that joined everything with spaces) but clearly contains several
+// references. Only fires when a block is long AND has 2+ date signatures, so it
+// never touches normal well-segmented input.
+// ---------------------------------------------------------------------------
+
+function splitRunOnBlock(block: string): string[] {
+  const dateRe = new RegExp(DATE_TOKEN, "g");
+  const positions: number[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = dateRe.exec(block))) positions.push(m.index);
+
+  // Not a run-on: 0 or 1 reference's worth of dates, or a short block.
+  if (positions.length < 2 || block.length < 400) return [block];
+
+  // Cut just before the author/org that precedes each date after the first.
+  // Walk left from each date past its author tokens until we hit something that
+  // belongs to the previous reference (a URL-ish token or terminal punctuation).
+  const cuts: number[] = [0];
+  for (let i = 1; i < positions.length; i++) {
+    const datePos = positions[i];
+    const before = block.slice(0, datePos).replace(/\s+$/, "");
+    const tokens = before.split(/(\s+)/);
+    let pos = before.length;
+    let cut = datePos;
+    for (let j = tokens.length - 1; j >= 0; j--) {
+      const tk = tokens[j];
+      pos -= tk.length;
+      if (/^\s+$/.test(tk)) continue;
+      // Stop at tokens that belong to the previous reference.
+      if (/:\/\/|\/|www\.|\.(?:com|org|net|edu|gov|au|uk|io|pdf|html?)\b/i.test(tk))
+        break;
+      if (/^[a-z]/.test(tk) && !/^(and|von|van|de|del|della|di|la|le)$/i.test(tk))
+        break;
+      if (/[.)\]]$/.test(tk) && pos < cut - 3) {
+        // a clean sentence end just before the author block — cut after it
+        cut = pos + tk.length;
+        break;
+      }
+      cut = pos; // author-like; extend boundary left
+    }
+    if (cut > (cuts[cuts.length - 1] ?? 0)) cuts.push(cut);
+  }
+
+  const out: string[] = [];
+  for (let i = 0; i < cuts.length; i++) {
+    const seg = block.slice(cuts[i], cuts[i + 1] ?? block.length).trim();
+    if (seg) out.push(seg);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 export function parseReferences(raw: string): string[] {
   if (!raw || !raw.trim()) return [];
   return segment(raw)
+    .flatMap(splitRunOnBlock) // revive run-on blocks that lost their newlines
     .flatMap(splitFusedAfterUrl)
     .map(repair)
     .filter((s) => s.length > 0);
