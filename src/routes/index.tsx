@@ -285,8 +285,15 @@ function Index() {
       return;
     }
     setActiveView("format");
-    const out = checkFormatting(text, formatStyle);
+    setFormatResults(null);
+    setFormatStep("selecting");
+  };
+
+  const handleSelectStyle = (style: CitationStyle) => {
+    setFormatStyle(style);
+    const out = checkFormatting(text, style);
     setFormatResults(out);
+    setFormatStep("done");
     if (!out.length) {
       toast.error("No references found in the text.");
     } else {
