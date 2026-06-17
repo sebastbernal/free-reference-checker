@@ -528,9 +528,6 @@ function Index() {
             <span className="text-sm font-semibold uppercase tracking-wide">
               Free reference checker
             </span>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Alpha
-            </span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Check reference authenticity and citation format for free.
@@ -542,6 +539,13 @@ function Index() {
             Archive — then validate their formatting against APA, MLA, Harvard
             and Chicago styles.
           </p>
+          <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>
+              This tool is currently under development — please verify all
+              results independently before relying on them.
+            </p>
+          </div>
         </div>
       </header>
 
