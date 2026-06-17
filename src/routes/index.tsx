@@ -587,15 +587,56 @@ function Index() {
                 />
               </div>
             </div>
-            <Textarea
-              id="refs"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={
-                "One reference per entry. APA, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx"
-              }
-              className="min-h-48 font-mono text-sm"
-            />
+            <div
+              className="relative"
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (!dragging) setDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                const file = e.dataTransfer.files?.[0];
+                if (!file) return;
+                const name = file.name.toLowerCase();
+                const ok =
+                  name.endsWith(".txt") ||
+                  name.endsWith(".docx") ||
+                  name.endsWith(".pdf") ||
+                  file.type.startsWith("text/");
+                if (!ok) {
+                  toast.error("Unsupported file type — use .txt, .docx or .pdf.");
+                  return;
+                }
+                handleFile(file, setText);
+              }}
+            >
+              <Textarea
+                id="refs"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={
+                  "One reference per entry. APA, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx\n\nOr drag and drop a .txt, .docx or .pdf file here."
+                }
+                className={cn(
+                  "min-h-48 font-mono text-sm",
+                  dragging && "ring-2 ring-primary ring-offset-2",
+                )}
+              />
+              {dragging && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-primary">
+                  <span className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Drop file to upload
+                  </span>
+                </div>
+              )}
+            </div>
+
             <p className="mt-3 text-xs text-muted-foreground">
               Supports .txt, .docx and .pdf uploads · up to 100 references.
             </p>
