@@ -1,22 +1,20 @@
-**Goal**: Keep the input card exactly as it is today (paste textarea, Try example, Upload button, all existing upload types), and additionally make the textarea/input area a drag-and-drop target for files.
+## Plan: Replace Alpha badge with development warning
 
-**Scope**: Single file — `src/routes/index.tsx`. No backend or extraction-logic changes; dropped files go through the existing `handleFile(file, setText)` + `extractTextFromFile`.
+### Summary
+Remove the "Alpha" badge from the header and add a prominent warning-style notice that the tool is under development, advising users to independently verify results.
 
-**Changes**:
+### Changes
+1. **Remove the Alpha badge** — delete the `<span>` element at line 531-533 inside the header.
+2. **Add a development warning banner** — insert a warning-styled alert (amber/yellow themed, matching existing alert patterns) near the top of the page, below the header description.
 
-1. **Add drag-and-drop handlers** to the textarea (or a wrapper around it):
-   - `onDragOver` (preventDefault, set a `dragging` highlight state)
-   - `onDragLeave` (clear highlight)
-   - `onDrop` (preventDefault, read `e.dataTransfer.files[0]`, clear highlight, call existing `handleFile(file, setText)`)
+   **Warning text:** "This tool is currently under development — please verify all results independently before relying on them."
 
-2. **Add a `dragging` state** (`const [dragging, setDragging] = useState(false)`) to drive a visual highlight (e.g. ring/border + subtle background) on the drop area while a file is dragged over it.
+3. **Preserve existing warning** — keep the current amber warning banner that appears during verification ("This tool may occasionally misclassify authentic references..."), as it serves a different purpose.
 
-3. **Visual cue**: when dragging, show a brief overlay/border indicating "Drop file to upload". Keep the normal textarea visible/usable otherwise.
+### Technical details
+- Use the existing `AlertTriangle` icon (already imported) for visual consistency.
+- Reuse the same amber alert styling (`border-amber-200 bg-amber-50 text-amber-900` etc.) as the existing warning.
+- The warning will be visible unconditionally (not tied to verification state) so users see it on page load.
 
-4. **Validation**: reuse the existing accepted types (.txt, .docx, .pdf). If a dropped file isn't one of these, show a toast ("Unsupported file type — use .txt, .docx or .pdf.") and ignore it.
-
-**Unchanged**: paste behavior, Try example button, Upload button, file input `accept`, privacy note, verify/format flows.
-
-**Technical notes**:
-- Reuse existing `handleFile` and `fileInputRef`; no new extraction code.
-- Guard the drop handler against empty `dataTransfer.files`.
+### Files affected
+- `src/routes/index.tsx`
