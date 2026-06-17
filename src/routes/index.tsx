@@ -250,11 +250,11 @@ function Index() {
   };
 
   const handleCheckFormat = () => {
-    if (!formatText.trim()) {
+    if (!text.trim()) {
       toast.error("Paste or upload some references first.");
       return;
     }
-    const out = checkFormatting(formatText, formatStyle);
+    const out = checkFormatting(text, formatStyle);
     setFormatResults(out);
     if (!out.length) {
       toast.error("No references found in the text.");
