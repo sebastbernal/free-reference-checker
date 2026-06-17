@@ -30,8 +30,10 @@ import {
 } from "@/lib/reference-check.functions";
 import {
   checkFormatting,
+  ELEMENT_TYPE_LABELS,
   STYLE_LABELS,
   type CitationStyle,
+  type ElementType,
   type FormatResult,
 } from "@/lib/format-check";
 
@@ -91,6 +93,19 @@ const FILTER_COLORS: Record<Filter, { active: string; inactive: string }> = {
     inactive: "text-muted-foreground",
   },
 };
+
+// Source-type filter for the authenticity view.
+type TypeFilter = ReferenceResult["type"] | "all";
+
+const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
+  { value: "all", label: "All types" },
+  { value: "academic", label: "Academic" },
+  { value: "web", label: "Web" },
+  { value: "offline", label: "Offline" },
+];
+
+// Element-type filter for the formatting view (built from detected types).
+type ElementFilter = ElementType | "all";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -185,6 +200,8 @@ function Index() {
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [verifiedText, setVerifiedText] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [elementFilter, setElementFilter] = useState<ElementFilter>("all");
   const [formatStyle, setFormatStyle] = useState<CitationStyle>("apa7");
   const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
     null,
@@ -214,6 +231,8 @@ function Index() {
           results?: ReferenceResult[] | null;
           verifiedText?: string;
           filter?: Filter;
+          typeFilter?: TypeFilter;
+          elementFilter?: ElementFilter;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
           formattedText?: string;
@@ -225,6 +244,8 @@ function Index() {
         if (typeof saved.verifiedText === "string")
           setVerifiedText(saved.verifiedText);
         if (saved.filter) setFilter(saved.filter);
+        if (saved.typeFilter) setTypeFilter(saved.typeFilter);
+        if (saved.elementFilter) setElementFilter(saved.elementFilter);
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
@@ -258,6 +279,8 @@ function Index() {
           results,
           verifiedText,
           filter,
+          typeFilter,
+          elementFilter,
           formatStyle,
           formatResults,
           formattedText,
@@ -274,6 +297,8 @@ function Index() {
     results,
     verifiedText,
     filter,
+    typeFilter,
+    elementFilter,
     formatStyle,
     formatResults,
     formattedText,
@@ -321,6 +346,7 @@ function Index() {
     }
     setResults(null);
     setFilter("all");
+    setTypeFilter("all");
     mutation.mutate(text);
   };
 
@@ -363,6 +389,7 @@ function Index() {
     const out = checkFormatting(text, style);
     setFormatResults(out);
     setFormattedText(text);
+    setElementFilter("all");
     setFormatStep("done");
     if (!out.length) {
       toast.error("No references found in the text.");
@@ -387,6 +414,7 @@ function Index() {
     setResults(null);
     setVerifiedText("");
     setFilter("all");
+    setTypeFilter("all");
     setText("");
     try {
       sessionStorage.removeItem(STORAGE_KEY);
@@ -398,6 +426,7 @@ function Index() {
   const clearFormat = () => {
     setFormatResults(null);
     setFormattedText("");
+    setElementFilter("all");
     setFormatStep("selecting");
   };
 
@@ -428,10 +457,33 @@ function Index() {
       }, {})
     : {};
 
+  const typeCounts = results
+    ? results.reduce<Record<string, number>>((acc, r) => {
+        acc[r.type] = (acc[r.type] ?? 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
   const filteredResults = results
-    ? filter === "all"
-      ? results
-      : results.filter((r) => r.verdict === filter)
+    ? results.filter(
+        (r) =>
+          (filter === "all" || r.verdict === filter) &&
+          (typeFilter === "all" || r.type === typeFilter),
+      )
+    : [];
+
+  const elementCounts = formatResults
+    ? formatResults.reduce<Record<string, number>>((acc, r) => {
+        acc[r.elementType] = (acc[r.elementType] ?? 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  const filteredFormatResults = formatResults
+    ? formatResults
+        .slice()
+        .sort((a, b) => GRADE_ORDER[a.grade] - GRADE_ORDER[b.grade])
+        .filter((r) => elementFilter === "all" || r.elementType === elementFilter)
     : [];
 
   return (
@@ -646,6 +698,33 @@ function Index() {
               })}
             </div>
 
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Source type:
+              </span>
+              {TYPE_FILTERS.map((t) => {
+                const count =
+                  t.value === "all" ? counts.total : typeCounts[t.value] ?? 0;
+                if (t.value !== "all" && count === 0) return null;
+                const active = typeFilter === t.value;
+                return (
+                  <Button
+                    key={t.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTypeFilter(t.value)}
+                  >
+                    {t.label}
+                    <span
+                      className={cn("ml-1", active ? "opacity-80" : "opacity-70")}
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="mt-4 space-y-3">
               {filteredResults.map((r) => (
                 <ReferenceResultCard key={r.n} result={r} />
@@ -687,18 +766,60 @@ function Index() {
               </Button>
             </div>
 
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Element type:
+              </span>
+              {(
+                [
+                  { value: "all" as ElementFilter, label: "All types" },
+                  ...(Object.keys(ELEMENT_TYPE_LABELS) as ElementType[]).map(
+                    (k) => ({
+                      value: k as ElementFilter,
+                      label: ELEMENT_TYPE_LABELS[k],
+                    }),
+                  ),
+                ]
+              ).map((t) => {
+                const count =
+                  t.value === "all"
+                    ? formatCounts.total
+                    : elementCounts[t.value] ?? 0;
+                if (t.value !== "all" && count === 0) return null;
+                const active = elementFilter === t.value;
+                return (
+                  <Button
+                    key={t.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setElementFilter(t.value)}
+                  >
+                    {t.label}
+                    <span
+                      className={cn("ml-1", active ? "opacity-80" : "opacity-70")}
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="mt-4 space-y-3">
-              {formatResults
-                ?.slice()
-                .sort((a, b) => GRADE_ORDER[a.grade] - GRADE_ORDER[b.grade])
-                .map((r) => (
-                  <FormatResultCard key={r.n} result={r} />
-                ))}
+              {filteredFormatResults.map((r) => (
+                <FormatResultCard key={r.n} result={r} />
+              ))}
               {formatResults?.length === 0 && (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   No references found in the text.
                 </p>
               )}
+              {(formatResults?.length ?? 0) > 0 &&
+                filteredFormatResults.length === 0 && (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    No references match this filter.
+                  </p>
+                )}
             </div>
           </div>
         )}

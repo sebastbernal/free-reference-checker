@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
+  ELEMENT_TYPE_LABELS,
   STYLE_LABELS,
   type FormatIssue,
   type FormatResult,
@@ -93,7 +94,11 @@ export function FormatResultCard({ result }: { result: FormatResult }) {
               {meta.label}
             </Badge>
             <Badge variant="outline">{STYLE_LABELS[result.style]}</Badge>
+            <Badge variant="secondary">
+              {ELEMENT_TYPE_LABELS[result.elementType]}
+            </Badge>
           </div>
+
 
           <div className="mt-3">
             <p className="text-xs font-medium text-muted-foreground">

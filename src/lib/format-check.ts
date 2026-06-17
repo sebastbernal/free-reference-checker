@@ -9,6 +9,27 @@ export type CitationStyle = "apa7" | "mla9" | "harvard" | "chicago17";
 
 export type Grade = "green" | "yellow" | "red";
 
+export type ElementType =
+  | "journal-article"
+  | "conference-paper"
+  | "book"
+  | "book-chapter"
+  | "report"
+  | "website"
+  | "thesis"
+  | "other";
+
+export const ELEMENT_TYPE_LABELS: Record<ElementType, string> = {
+  "journal-article": "Journal article",
+  "conference-paper": "Conference paper",
+  book: "Book",
+  "book-chapter": "Book chapter",
+  report: "Report",
+  website: "Website",
+  thesis: "Thesis",
+  other: "Other",
+};
+
 export interface FormatIssue {
   snippet: string; // substring of the original reference to highlight ("" = none)
   problem: string;
@@ -20,6 +41,7 @@ export interface FormatResult {
   reference: string;
   style: CitationStyle;
   grade: Grade;
+  elementType: ElementType;
   ideal: string;
   issues: FormatIssue[];
 }
@@ -104,6 +126,38 @@ function extractParts(ref: string): Parts {
     usesInitials,
     usesFullNames,
   };
+}
+
+// Best-effort element-type classification (like Zotero's item type), based only
+// on the reference text. Heuristic and order-sensitive — first match wins.
+function detectElementType(ref: string): ElementType {
+  const s = ref.toLowerCase();
+  const hasDoi = DOI_RE.test(ref);
+  const urlM = URL_RE.exec(ref);
+  const url = urlM ? urlM[0] : "";
+  const isDoiUrl = /doi\.org|arxiv\.org/i.test(url);
+  const hasWebUrl = !!url && !isDoiUrl;
+  const journalMarkers =
+    /\bjournal\b|\bvol\.?\b|\bvolume\b|\bpp\.\b|\bno\.\b|\bissue\b|\(\d{1,4}\)\s*,\s*\d+/.test(
+      s,
+    );
+
+  if (/\bthesis\b|\bdissertation\b|\bph\.?d\.?\b|master'?s\b|doctoral\b/.test(s))
+    return "thesis";
+  if (/\bproceedings\b|\bconference\b|\bsymposium\b|\bworkshop\b|\bconf\.\b/.test(s))
+    return "conference-paper";
+  if (
+    /technical report|working paper|white paper|\breport no\.?\b|\bwhitepaper\b|\btech\. rep\.\b/.test(
+      s,
+    )
+  )
+    return "report";
+  if (/(^|\W)in\s.+\(eds?\.?\)|\(ed\.\)|\beditors?\b|\bchapter\b/.test(s))
+    return "book-chapter";
+  if (hasDoi || journalMarkers) return "journal-article";
+  if (hasWebUrl) return "website";
+  if (/\bpress\b|\bpublish|\bbooks?\b|\bedition\b|\bisbn\b/.test(s)) return "book";
+  return "other";
 }
 
 function gradeFromIssues(issues: FormatIssue[]): Grade {
@@ -263,6 +317,7 @@ function checkOne(n: number, ref: string, style: CitationStyle): FormatResult {
     reference: ref,
     style,
     grade: gradeFromIssues(issues),
+    elementType: detectElementType(ref),
     ideal: buildIdeal(p, style),
     issues,
   };
