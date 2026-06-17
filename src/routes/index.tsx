@@ -204,6 +204,12 @@ function Index() {
     formatResults,
   ]);
 
+  const scrollToResults = (ref: React.RefObject<HTMLDivElement | null>) => {
+    requestAnimationFrame(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   const mutation = useMutation({
     mutationFn: (input: string) => checkFn({ data: { text: input } }),
     onSuccess: (data) => {
@@ -213,6 +219,8 @@ function Index() {
       setResults(sorted);
       if (!data.results.length) {
         toast.error("No references found in the text.");
+      } else {
+        scrollToResults(verifyResultsRef);
       }
     },
     onError: (err) => {
