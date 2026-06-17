@@ -218,6 +218,7 @@ function Index() {
     "idle",
   );
   const [restored, setRestored] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

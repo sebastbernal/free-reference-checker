@@ -1,13 +1,22 @@
-**Goal**: Add a clear in-UI privacy statement explaining that uploaded files stay in the browser, are never stored, and only extracted reference text is sent to third-party APIs during checking.
+**Goal**: Keep the input card exactly as it is today (paste textarea, Try example, Upload button, all existing upload types), and additionally make the textarea/input area a drag-and-drop target for files.
 
-**Location**: `src/routes/index.tsx` — in the main input card, directly under the existing upload-support note (`Supports .txt, .docx and .pdf uploads · up to 100 references.`).
+**Scope**: Single file — `src/routes/index.tsx`. No backend or extraction-logic changes; dropped files go through the existing `handleFile(file, setText)` + `extractTextFromFile`.
 
-**UI approach**: Insert a small info banner matching the existing muted-info style already used on the page (e.g. the "Not what you expected?" email banner). It will use the `ShieldCheck` or `Info` icon with muted text, placed just before the action buttons so it's visible when users consider uploading.
+**Changes**:
 
-**Exact text**:
-> Your privacy: Uploaded files are processed entirely in your browser — they are never uploaded to or stored on any server. Only the extracted reference text is sent to third-party scholarly APIs (CrossRef, Semantic Scholar, OpenAlex, arXiv, DBLP) and link-checking services during verification.
+1. **Add drag-and-drop handlers** to the textarea (or a wrapper around it):
+   - `onDragOver` (preventDefault, set a `dragging` highlight state)
+   - `onDragLeave` (clear highlight)
+   - `onDrop` (preventDefault, read `e.dataTransfer.files[0]`, clear highlight, call existing `handleFile(file, setText)`)
 
-**Technical details**:
-- Add one `<div className="...">` block with an icon + text, using the same styling pattern as the existing muted info banners on the page (flex, gap-3, rounded-lg, border, bg-muted/40, text-sm, text-muted-foreground).
-- Import `Info` from `lucide-react` if not already imported. `Info` is already imported (line 10), so no new imports needed.
-- No other files touched.
+2. **Add a `dragging` state** (`const [dragging, setDragging] = useState(false)`) to drive a visual highlight (e.g. ring/border + subtle background) on the drop area while a file is dragged over it.
+
+3. **Visual cue**: when dragging, show a brief overlay/border indicating "Drop file to upload". Keep the normal textarea visible/usable otherwise.
+
+4. **Validation**: reuse the existing accepted types (.txt, .docx, .pdf). If a dropped file isn't one of these, show a toast ("Unsupported file type — use .txt, .docx or .pdf.") and ignore it.
+
+**Unchanged**: paste behavior, Try example button, Upload button, file input `accept`, privacy note, verify/format flows.
+
+**Technical notes**:
+- Reuse existing `handleFile` and `fileInputRef`; no new extraction code.
+- Guard the drop handler against empty `dataTransfer.files`.
