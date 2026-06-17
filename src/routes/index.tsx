@@ -167,6 +167,7 @@ function Index() {
           filter?: Filter;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
+          activeView?: "verify" | "format" | null;
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
@@ -174,6 +175,7 @@ function Index() {
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
+        if (saved.activeView) setActiveView(saved.activeView);
       }
     } catch {
       // ignore corrupt storage
