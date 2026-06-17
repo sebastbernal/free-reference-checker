@@ -148,6 +148,9 @@ function Index() {
   const [activeView, setActiveView] = useState<"verify" | "format" | null>(
     null,
   );
+  const [formatStep, setFormatStep] = useState<"idle" | "selecting" | "done">(
+    "idle",
+  );
   const [restored, setRestored] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
