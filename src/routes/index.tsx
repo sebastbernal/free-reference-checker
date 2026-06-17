@@ -310,6 +310,13 @@ function Index() {
       return;
     }
     setActiveView("format");
+    // If we already have formatting results for this exact text, switch back to
+    // the view and keep the chosen style highlighted — don't clear or reset.
+    if (formatResults && text === formattedText) {
+      setFormatStep("done");
+      scrollToResults(formatResultsRef);
+      return;
+    }
     setFormatResults(null);
     setFormatStep("selecting");
   };
@@ -318,6 +325,7 @@ function Index() {
     setFormatStyle(style);
     const out = checkFormatting(text, style);
     setFormatResults(out);
+    setFormattedText(text);
     setFormatStep("done");
     if (!out.length) {
       toast.error("No references found in the text.");
