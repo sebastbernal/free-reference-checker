@@ -620,7 +620,7 @@ function Index() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={
-                  "One reference per entry. APA, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx\n\nOr drag and drop a .txt, .docx or .pdf file here."
+                  "Paste your references here (one per line), or drag & drop a .txt, .docx or .pdf file.\n\nAPA, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx"
                 }
                 className={cn(
                   "min-h-48 font-mono text-sm",
