@@ -28,6 +28,13 @@ import {
 
 const STORAGE_KEY = "reference-checker-state";
 
+const VERSION = "1.0.0";
+const BUILD_DATE = new Date().toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
 type Filter = Verdict | "all";
 
 const FILTERS: { value: Filter; label: string }[] = [
