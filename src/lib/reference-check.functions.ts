@@ -47,6 +47,11 @@ const MISMATCH_SIM = 50;
 const CONCURRENCY = 4;
 const MAX_REFERENCES = 100;
 
+// Live pages this many years old (or older) are flagged for manual review.
+const OUTDATED_AGE_YEARS = 5;
+// Statuses that prove the server exists but refuses automated checks.
+const BLOCKED_CODES = new Set([401, 403, 405, 429, 451]);
+
 
 
 
