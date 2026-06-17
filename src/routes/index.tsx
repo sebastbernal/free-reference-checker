@@ -204,7 +204,7 @@ function Index() {
     formatResults,
   ]);
 
-  const scrollToResults = (ref: React.RefObject<HTMLDivElement | null>) => {
+  const scrollToResults = (ref: RefObject<HTMLDivElement | null>) => {
     requestAnimationFrame(() => {
       ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
