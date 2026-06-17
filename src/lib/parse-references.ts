@@ -71,8 +71,11 @@ export function parseReferences(raw: string): string[] {
 // Fragments starting with sentence punctuation (e.g. "(Accessed…") are left
 // alone so trailing prose after a URL isn't swallowed.
 function mergeWrappedUrl(entry: string): string {
+  // Fragment is either a path slug (contains "-" or "/", any leading case) or an
+  // entirely lowercase mid-word wrap. A capitalized word with no "-"/"/" (e.g.
+  // "City") is treated as the next reference's prose, not part of the URL.
   const re =
-    /(https?:\/\/[^\s]+)\s+([A-Za-z0-9%](?:[A-Za-z0-9%._~#?&=+/-]*[-/][A-Za-z0-9%._~#?&=+/-]*|[a-z0-9%._~#?&=+]*))/;
+    /(https?:\/\/[^\s]+)\s+([A-Za-z0-9%][A-Za-z0-9%._~#?&=+/-]*[-/][A-Za-z0-9%._~#?&=+/-]*|[a-z0-9%][a-z0-9%._~#?&=+]*)/;
   let prev: string;
   let out = entry;
   do {
