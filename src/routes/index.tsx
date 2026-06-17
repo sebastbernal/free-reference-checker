@@ -28,6 +28,13 @@ import {
 
 const STORAGE_KEY = "reference-checker-state";
 
+const VERSION = "1.0.0";
+const BUILD_DATE = new Date().toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
 type Filter = Verdict | "all";
 
 const FILTERS: { value: Filter; label: string }[] = [
@@ -621,7 +628,10 @@ function Index() {
             Sebastian Bernal Garcia
           </a>{" "}
           · MIT License · 2026
+          <br />
+          v{VERSION} · Updated {BUILD_DATE}
         </footer>
+
       </main>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-4">
