@@ -628,7 +628,10 @@ function Index() {
             Sebastian Bernal Garcia
           </a>{" "}
           · MIT License · 2026
+          <br />
+          v{VERSION} · Updated {BUILD_DATE}
         </footer>
+
       </main>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-4">
