@@ -279,24 +279,85 @@ export async function dblpByTitle(title: string): Promise<Candidate[]> {
 // Web link liveness + Wayback
 // ---------------------------------------------------------------------------
 
-export async function httpCheck(url: string): Promise<string> {
+export interface HttpResult {
+  /** Numeric HTTP status as a string, or "error: <name>" when unreachable. */
+  status: string;
+  /** Raw Last-Modified header, if the server sent one. */
+  lastModified: string;
+  /** Final URL after redirects. */
+  finalUrl: string;
+}
+
+export async function httpCheck(url: string): Promise<HttpResult> {
   try {
     let r = await fetchWithTimeout(url, {
       method: "HEAD",
-      headers: { "User-Agent": USER_AGENT },
+      headers: BROWSER_HEADERS,
       redirect: "follow",
     });
     if (r.status === 405 || r.status >= 400) {
       r = await fetchWithTimeout(url, {
         method: "GET",
-        headers: { "User-Agent": USER_AGENT },
+        headers: BROWSER_HEADERS,
         redirect: "follow",
       });
     }
-    return String(r.status);
+    return {
+      status: String(r.status),
+      lastModified: r.headers.get("last-modified") ?? "",
+      finalUrl: r.url || url,
+    };
   } catch (e) {
-    return `error: ${(e as Error).name}`;
+    return { status: `error: ${(e as Error).name}`, lastModified: "", finalUrl: url };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Freshness / "outdated source" detection
+// ---------------------------------------------------------------------------
+
+// Years considered plausible content dates (avoids matching IDs like "1220").
+const MIN_PLAUSIBLE_YEAR = 1980;
+
+function plausibleYearsIn(text: string): number[] {
+  const now = new Date().getFullYear();
+  const out: number[] = [];
+  const re = /(19|20)\d{2}/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const y = Number(m[0]);
+    if (y >= MIN_PLAUSIBLE_YEAR && y <= now) out.push(y);
+  }
+  return out;
+}
+
+/**
+ * Best-guess publication / "content" year for a web reference, using (in order
+ * of trust) the reference text, the URL, and the Last-Modified header — the
+ * header is only trusted when it is itself old (some servers report "now").
+ * Returns null when no plausible year is found.
+ */
+export function detectContentYear(
+  reference: string,
+  url: string,
+  lastModified: string,
+): number | null {
+  const now = new Date().getFullYear();
+  const candidates = [...plausibleYearsIn(reference), ...plausibleYearsIn(url)];
+
+  if (lastModified) {
+    const t = Date.parse(lastModified);
+    if (!Number.isNaN(t)) {
+      const lmYear = new Date(t).getFullYear();
+      // Only trust Last-Modified when it indicates an old page; many servers
+      // return the current date, which would mask a genuinely old document.
+      if (lmYear >= MIN_PLAUSIBLE_YEAR && lmYear < now) candidates.push(lmYear);
+    }
+  }
+
+  if (!candidates.length) return null;
+  // The most recent plausible year best represents the content's currency.
+  return Math.max(...candidates);
 }
 
 export async function waybackCheck(url: string): Promise<string> {
