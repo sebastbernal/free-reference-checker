@@ -1,20 +1,26 @@
-## Problem
-Clicking **Check formatting** does run (`handleCheckFormat` computes results and calls `setFormatResults`), but the results render in a section far below the input card — below the authenticity results too. On a short viewport nothing visibly changes, so it feels like "click does nothing."
+## Goal
+Keep one shared paste area, but make the two buttons below it behave like a toggle/tabs: only one result set is shown at a time, and the active button is visually highlighted (selected color).
 
-## Fix
-Make the action visibly respond by auto-scrolling to the freshly rendered results, and give a small in-view confirmation.
+## Behavior
+- Click **Verify authenticity** → runs the authenticity check, highlights that button, and shows ONLY the authenticity results.
+- Click **Check formatting** → runs the formatting check, highlights that button, and shows ONLY the formatting results.
+- The other result set is hidden while the other mode is active.
 
-### Changes in `src/routes/index.tsx`
-1. **Add result section refs** — a `formatResultsRef` and a `verifyResultsRef` (`useRef<HTMLDivElement>`), attached to the existing format-results `<div>` and the verify-results `<div>`.
-2. **Scroll on action:**
-   - In `handleCheckFormat`, after `setFormatResults(out)` and when `out.length > 0`, scroll `formatResultsRef` into view (`scrollIntoView({ behavior: "smooth", block: "start" })`), wrapped in a `requestAnimationFrame`/`setTimeout(0)` so it runs after the results render.
-   - In `mutation.onSuccess` (verify), do the same for `verifyResultsRef` after results are set.
-3. **Keep both results visible** — no structural change needed; both sections already render independently.
-
-### Optional polish
-- Add a brief `toast.success` (e.g. "Formatting checked — see results below") so there is immediate in-view feedback even before the scroll, mirroring the existing error toasts.
+## Changes in `src/routes/index.tsx`
+1. **Add an `activeView` state** — `"verify" | "format" | null` (start `null` so nothing shows until a button is clicked). Persist it in sessionStorage alongside the other state.
+2. **Set the view on click:**
+   - `handleCheck` (verify) → `setActiveView("verify")` before running.
+   - `handleCheckFormat` → `setActiveView("format")`.
+3. **Highlight the active button:**
+   - Verify button: `variant={activeView === "verify" ? "default" : "outline"}`.
+   - Format button: `variant={activeView === "format" ? "default" : "outline"}`.
+   (Both currently render as primary/secondary; switch to the active/outline pattern so the selected one stands out.)
+4. **Show only the active results:**
+   - Authenticity results block renders only when `activeView === "verify"` (and `counts` exists / loading).
+   - Formatting results block renders only when `activeView === "format"` (and `formatCounts` exists).
+5. Keep the existing auto-scroll to results.
 
 ## Verification
-- Paste the example, click **Check formatting**, confirm the page smoothly scrolls to the colored grade cards.
-- Click **Verify authenticity**, confirm it scrolls to the authenticity results.
-- Confirm clicking with an empty box still shows the "Paste or upload…" toast.
+- Paste the example, click **Check formatting** → only formatting grades appear, that button is highlighted.
+- Click **Verify authenticity** → formatting results disappear, only authenticity results show, that button is now highlighted.
+- Reload → the last active view and its results are restored.
