@@ -3,13 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import {
+  AlertTriangle,
   ChevronDown,
   FileText,
   Heart,
   Info,
   ListChecks,
   Loader2,
-  
   ShieldCheck,
   Trash2,
   Upload,
@@ -520,6 +520,26 @@ function Index() {
           </CardContent>
         </Card>
 
+        {activeView === "verify" && (mutation.isPending || results) && (
+          <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>
+              This tool may occasionally misclassify authentic references —
+              always double-check flagged items manually.
+            </p>
+          </div>
+        )}
+
+        {activeView === "format" &&
+          (formatStep === "selecting" || formatResults) && (
+            <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <p>
+                Formatting checks are heuristic and can't see italics in pasted
+                text — treat the ideal version as a guide, not a final answer.
+              </p>
+            </div>
+          )}
 
         {activeView === "verify" && mutation.isPending && (
           <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -602,11 +622,6 @@ function Index() {
                 </p>
               )}
             </div>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              This tool may occasionally misclassify authentic references —
-              always double-check flagged items manually.
-            </p>
           </div>
         )}
 
@@ -651,11 +666,6 @@ function Index() {
                 </p>
               )}
             </div>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Formatting checks are heuristic and can't see italics in pasted
-              text — treat the ideal version as a guide, not a final answer.
-            </p>
           </div>
         )}
 
