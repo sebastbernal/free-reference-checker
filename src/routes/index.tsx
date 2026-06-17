@@ -219,9 +219,11 @@ function Index() {
         JSON.stringify({
           text,
           results,
+          verifiedText,
           filter,
           formatStyle,
           formatResults,
+          formattedText,
           activeView,
           formatStep,
         }),
@@ -233,9 +235,11 @@ function Index() {
     restored,
     text,
     results,
+    verifiedText,
     filter,
     formatStyle,
     formatResults,
+    formattedText,
     activeView,
     formatStep,
   ]);
