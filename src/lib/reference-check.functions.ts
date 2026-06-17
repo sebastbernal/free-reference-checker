@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { parseReferences } from "./parse-references";
 import {
   arxivByTitle,
   crossrefByDoi,
