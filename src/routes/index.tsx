@@ -513,6 +513,9 @@ function Index() {
             <span className="text-sm font-semibold uppercase tracking-wide">
               Free reference checker
             </span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Alpha
+            </span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Check reference authenticity and citation format for free.
