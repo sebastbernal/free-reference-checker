@@ -268,6 +268,7 @@ function Index() {
       toast.error("Paste or upload some references first.");
       return;
     }
+    setActiveView("format");
     const out = checkFormatting(text, formatStyle);
     setFormatResults(out);
     if (!out.length) {
