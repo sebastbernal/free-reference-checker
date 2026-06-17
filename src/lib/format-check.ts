@@ -317,6 +317,7 @@ function checkOne(n: number, ref: string, style: CitationStyle): FormatResult {
     reference: ref,
     style,
     grade: gradeFromIssues(issues),
+    elementType: detectElementType(ref),
     ideal: buildIdeal(p, style),
     issues,
   };
