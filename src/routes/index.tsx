@@ -143,13 +143,20 @@ function toCsv(rows: ReferenceResult[]): string {
 }
 
 function Index() {
+  const [tab, setTab] = useState<"verify" | "format">("verify");
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
+  const [formatText, setFormatText] = useState("");
+  const [formatStyle, setFormatStyle] = useState<CitationStyle>("apa7");
+  const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
+    null,
+  );
   const [restored, setRestored] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formatFileInputRef = useRef<HTMLInputElement>(null);
   const checkFn = useServerFn(checkReferences);
 
   // Restore previous session state after mount (avoids SSR mismatch).
