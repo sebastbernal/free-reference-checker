@@ -120,6 +120,39 @@ const DOI_RE = /10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/i;
 const URL_RE = /https?:\/\/[^\s]+/i;
 const YEAR_RE = /\((?:\d{4}[a-z]?|n\.d\.)\)/;
 
+// Markers left in URLs when a citation is copied from an AI assistant's output.
+const AI_TRACE_MARKERS = [
+  "chatgpt.com",
+  "chatgpt",
+  "openai",
+  "perplexity.ai",
+  "perplexity",
+  "google-gemini",
+  "gemini",
+  "bard",
+  "anthropic",
+  "claude",
+  "copilot",
+  "bingchat",
+  "you.com",
+  "poe.com",
+];
+const AI_TRACE_PARAM_RE = /(?:utm_source|utm_medium|source|ref)=([^\s&"')\]]+)/gi;
+
+// Returns the matched marker (e.g. "utm_source=chatgpt.com") or "" when none.
+function detectAiTrace(ref: string): string {
+  const lower = ref.toLowerCase();
+  let m: RegExpExecArray | null;
+  AI_TRACE_PARAM_RE.lastIndex = 0;
+  while ((m = AI_TRACE_PARAM_RE.exec(lower))) {
+    const value = m[1];
+    if (AI_TRACE_MARKERS.some((marker) => value.includes(marker))) {
+      return m[0].replace(/[.,;)]+$/, "");
+    }
+  }
+  return "";
+}
+
 function extract(ref: string): {
   kind: "academic" | "web" | "offline";
   doi: string;
