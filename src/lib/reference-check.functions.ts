@@ -37,6 +37,7 @@ export interface ReferenceResult {
   wayback: string;
   verdict: Verdict;
   notes: string;
+  aiTrace: string;
 }
 
 const MIN_TITLE_SIM = 70;
