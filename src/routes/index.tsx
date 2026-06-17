@@ -149,6 +149,8 @@ function Index() {
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const verifyResultsRef = useRef<HTMLDivElement>(null);
+  const formatResultsRef = useRef<HTMLDivElement>(null);
   const checkFn = useServerFn(checkReferences);
 
   // Restore previous session state after mount (avoids SSR mismatch).
