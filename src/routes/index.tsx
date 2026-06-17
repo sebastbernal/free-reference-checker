@@ -314,7 +314,11 @@ function Index() {
   };
 
   const mutation = useMutation({
-    mutationFn: (input: string) => checkFn({ data: { text: input } }),
+    mutationFn: (input: string) => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      return checkFn({ data: { text: input }, signal: controller.signal });
+    },
     onSuccess: (data, input) => {
       const sorted = [...data.results].sort(
         (a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict],
@@ -328,9 +332,20 @@ function Index() {
       }
     },
     onError: (err) => {
-      toast.error(`Check failed: ${(err as Error).message}`);
+      const e = err as Error;
+      if (e.name === "AbortError" || abortRef.current?.signal.aborted) {
+        toast("Verification stopped.");
+        return;
+      }
+      toast.error(`Check failed: ${e.message}`);
     },
   });
+
+  const handleStop = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    mutation.reset();
+  };
 
   const handleCheck = () => {
     if (!text.trim()) {
