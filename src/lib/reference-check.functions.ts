@@ -321,12 +321,26 @@ async function processReferenceCore(n: number, ref: string): Promise<ReferenceRe
       return base;
     }
 
-    // 2. Server responded but blocked automated verification — the page exists.
+    // 2. Server responded but blocked automated verification — fall back to
+    //    the archive: a blocked page that was never archived likely never existed.
     if (BLOCKED_CODES.has(code)) {
-      base.verdict = "check";
-      base.notes =
-        `Server responded (HTTP ${code}) but blocked automated verification — ` +
-        `the page likely exists, confirm manually.${agingNote}`;
+      const wb = await waybackCheck(url);
+      base.wayback = wb;
+      if (wb.startsWith("snapshot")) {
+        base.verdict = "check";
+        base.notes =
+          `Server responded (HTTP ${code}) but blocked automated verification — ` +
+          `an archived ${wb} exists, confirm manually.${agingNote}`;
+      } else if (wb === "NO snapshot ever") {
+        base.verdict = "no-trace";
+        base.notes =
+          `Server blocked verification (HTTP ${code}) and the page was never archived — likely fabricated.`;
+      } else {
+        base.verdict = "check";
+        base.notes =
+          `Server responded (HTTP ${code}) but blocked automated verification; ` +
+          `archive status could not be confirmed (${wb}). Verify manually.${agingNote}`;
+      }
       return base;
     }
 
