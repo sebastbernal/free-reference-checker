@@ -175,18 +175,24 @@ function Index() {
         const saved = JSON.parse(raw) as {
           text?: string;
           results?: ReferenceResult[] | null;
+          verifiedText?: string;
           filter?: Filter;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
+          formattedText?: string;
           activeView?: "verify" | "format" | null;
           formatStep?: "idle" | "selecting" | "done";
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
+        if (typeof saved.verifiedText === "string")
+          setVerifiedText(saved.verifiedText);
         if (saved.filter) setFilter(saved.filter);
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
+        if (typeof saved.formattedText === "string")
+          setFormattedText(saved.formattedText);
         if (saved.activeView) setActiveView(saved.activeView);
         if (saved.formatStep) {
           setFormatStep(saved.formatStep);
