@@ -1,10 +1,39 @@
-Move the **Clear** button from the verify-results header into the paste-reference toolbar area (top-right, next to "Try example" and "Upload").
+## Goal
 
-**Why:** The button is currently buried under results; placing it on the input surface makes it discoverable before the user even runs a check.
+For a web reference whose server **blocks** automated verification (case 2: HTTP 401/403/405/429/451), run the Wayback/snapshot lookup so the card always shows an archive status — and downgrade the verdict to **red** when no snapshot ever existed (a blocked page that was never archived likely never really existed).
 
-**What changes:**
-1. In the toolbar row above the textarea (where "Try example" and "Upload" live), add a **Clear** button that appears whenever `text.length > 0 || results != null || formatResults != null`. It uses the existing `clearAll` handler (resets text, results, filters, and session storage).
-2. Remove the **Clear** button from the verify-results header row (the row that currently also holds "Export CSV").
-3. Leave the formatting-side `clearFormat` button untouched for now — the new top-level Clear button already covers resetting the format state because `clearAll` is the global reset. If desired, we can wire the same `clearAll` into the format flow in a follow-up.
+## Change
 
-**Visual:** The toolbar becomes: `[Paste reference(s) label]`  `[Try example]` `[Upload]` `[Clear]`  — all aligned to the right, with Clear using the ghost variant and Trash2 icon like today.
+File: `src/lib/reference-check.functions.ts`, blocked branch (case 2, lines 325–331).
+
+Today this branch returns early with `verdict = "check"` and never sets `base.wayback`, so the card shows no archive line. Replace it so it runs `waybackCheck(url)`, stores the result, and picks the verdict from the snapshot outcome:
+
+- **Snapshot exists** (`"snapshot exists (YYYY)"`) → `verdict = "check"` (amber). Note: server blocked verification but an archived snapshot exists + aging note.
+- **No snapshot ever** (`"NO snapshot ever"`) → `verdict = "no-trace"` (**red**). Note: server blocked (HTTP code) and the page was never archived — likely fabricated.
+- **Lookup inconclusive** (`"error: …"`, archive itself unreachable) → `verdict = "check"` (amber). Note: server responded but blocked, archive status couldn't be confirmed — verify manually + aging note.
+
+In every sub-case `base.wayback` is set, so the card renders the archive line consistently instead of silently omitting it.
+
+## What does NOT change
+
+- `ReferenceResultCard.tsx` — already renders `result.wayback` when non-empty, and `no-trace` already maps to red.
+- Cases 1 (live), 3 (network error), 4 (dead page) — untouched.
+
+## Technical detail
+
+```text
+// case 2 (blocked) becomes:
+const wb = await waybackCheck(url);
+base.wayback = wb;
+if (wb.startsWith("snapshot")) {
+  base.verdict = "check";
+  base.notes = `Server responded (HTTP ${code}) but blocked verification — an archived ${wb} exists.${agingNote}`;
+} else if (wb === "NO snapshot ever") {
+  base.verdict = "no-trace";
+  base.notes = `Server blocked verification (HTTP ${code}) and the page was never archived — likely fabricated.`;
+} else {
+  base.verdict = "check";
+  base.notes = `Server responded (HTTP ${code}) but blocked verification; archive status could not be confirmed (${wb}). Verify manually.${agingNote}`;
+}
+return base;
+```
