@@ -58,17 +58,17 @@ const FILTERS: { value: Filter; label: string }[] = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Reference Checker — detect fabricated citations" },
+      { title: "Reference Checker — authenticity & citation format" },
       {
         name: "description",
         content:
-          "Verify references against CrossRef, Semantic Scholar, OpenAlex, arXiv and DBLP, and check web links for liveness and Wayback archives.",
+          "Verify references for authenticity against CrossRef, Semantic Scholar, OpenAlex, arXiv and DBLP, check web links for liveness, and validate citation formatting against APA, MLA, Harvard and Chicago styles.",
       },
       { property: "og:title", content: "Reference Checker" },
       {
         property: "og:description",
         content:
-          "Detect likely-fabricated references. Checks DOIs and titles across scholarly databases plus live URLs and the Internet Archive.",
+          "Detect likely-fabricated references and check citation formatting. Verifies DOIs and titles across scholarly databases, live URLs and the Internet Archive, plus APA, MLA, Harvard and Chicago formatting.",
       },
     ],
   }),
@@ -408,13 +408,14 @@ function Index() {
             </span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Detect likely-fabricated references
+            Check reference authenticity and citation format
           </h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Paste a reference list or upload a file. Academic citations are
-            verified against CrossRef, Semantic Scholar, OpenAlex, arXiv and
-            DBLP; web links are checked for liveness and against the Internet
-            Archive.
+            Paste a reference list or upload a file. Citations are verified for
+            authenticity against CrossRef, Semantic Scholar, OpenAlex, arXiv and
+            DBLP, and web links are checked for liveness and against the Internet
+            Archive — then validate their formatting against APA, MLA, Harvard
+            and Chicago styles.
           </p>
         </div>
       </header>
