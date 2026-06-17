@@ -649,6 +649,21 @@ function Index() {
           </div>
         )}
 
+        {activeView === "verify" && (mutation.isPending || results) && (
+          <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            <Mail className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>
+              Not what you expected? Disappointed? Send me an email to{" "}
+              <a
+                href="mailto:sebast.bernal.garcia@gmail.com"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                sebast.bernal.garcia@gmail.com
+              </a>
+            </p>
+          </div>
+        )}
+
         {activeView === "format" &&
           (formatStep === "selecting" || formatResults) && (
             <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
