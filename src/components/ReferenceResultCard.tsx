@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Archive,
+  Bot,
   BookOpen,
   CheckCircle2,
   Globe,
@@ -89,6 +90,12 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
               {result.source && (
                 <Badge variant="secondary">{result.source}</Badge>
               )}
+              {result.aiTrace && (
+                <Badge className="gap-1 border-0 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
+                  <Bot className="h-3.5 w-3.5" />
+                  AI trace
+                </Badge>
+              )}
             </div>
             {result.titleScore !== null && (
               <span className="text-xs text-muted-foreground">
@@ -106,6 +113,16 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
               <div className="sm:col-span-2">
                 <dt className="inline font-medium">Matched title: </dt>
                 <dd className="inline">{result.matchedTitle}</dd>
+              </div>
+            )}
+            {result.aiTrace && (
+              <div className="sm:col-span-2">
+                <dt className="inline font-medium text-red-700 dark:text-red-400">
+                  AI trace:{" "}
+                </dt>
+                <dd className="inline break-all text-red-700 dark:text-red-400">
+                  {result.aiTrace}
+                </dd>
               </div>
             )}
             {result.doi && (
