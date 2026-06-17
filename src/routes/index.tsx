@@ -9,6 +9,7 @@ import {
   Heart,
   Info,
   ListChecks,
+  Mail,
   Loader2,
   ShieldCheck,
   Trash2,
