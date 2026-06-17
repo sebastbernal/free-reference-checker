@@ -128,6 +128,38 @@ function extractParts(ref: string): Parts {
   };
 }
 
+// Best-effort element-type classification (like Zotero's item type), based only
+// on the reference text. Heuristic and order-sensitive — first match wins.
+function detectElementType(ref: string): ElementType {
+  const s = ref.toLowerCase();
+  const hasDoi = DOI_RE.test(ref);
+  const urlM = URL_RE.exec(ref);
+  const url = urlM ? urlM[0] : "";
+  const isDoiUrl = /doi\.org|arxiv\.org/i.test(url);
+  const hasWebUrl = !!url && !isDoiUrl;
+  const journalMarkers =
+    /\bjournal\b|\bvol\.?\b|\bvolume\b|\bpp\.\b|\bno\.\b|\bissue\b|\(\d{1,4}\)\s*,\s*\d+/.test(
+      s,
+    );
+
+  if (/\bthesis\b|\bdissertation\b|\bph\.?d\.?\b|master'?s\b|doctoral\b/.test(s))
+    return "thesis";
+  if (/\bproceedings\b|\bconference\b|\bsymposium\b|\bworkshop\b|\bconf\.\b/.test(s))
+    return "conference-paper";
+  if (
+    /technical report|working paper|white paper|\breport no\.?\b|\bwhitepaper\b|\btech\. rep\.\b/.test(
+      s,
+    )
+  )
+    return "report";
+  if (/(^|\W)in\s.+\(eds?\.?\)|\(ed\.\)|\beditors?\b|\bchapter\b/.test(s))
+    return "book-chapter";
+  if (hasDoi || journalMarkers) return "journal-article";
+  if (hasWebUrl) return "website";
+  if (/\bpress\b|\bpublish|\bbooks?\b|\bedition\b|\bisbn\b/.test(s)) return "book";
+  return "other";
+}
+
 function gradeFromIssues(issues: FormatIssue[]): Grade {
   if (issues.some((i) => i.severity === "major")) return "red";
   if (issues.length > 0) return "yellow";
