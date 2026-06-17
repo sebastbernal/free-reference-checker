@@ -511,7 +511,13 @@ function Index() {
       <header className="border-b bg-muted/30">
         <div className="mx-auto max-w-4xl px-4 py-10">
           <div className="flex items-center gap-2 text-primary">
-            <ShieldCheck className="h-6 w-6" />
+            <img
+              src={appIcon}
+              alt="Free reference checker logo"
+              width={24}
+              height={24}
+              className="h-6 w-6 rounded"
+            />
             <span className="text-sm font-semibold uppercase tracking-wide">
               Free reference checker
             </span>
