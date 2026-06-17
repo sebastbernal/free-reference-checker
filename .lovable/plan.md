@@ -1,41 +1,49 @@
-## Problem
+## Fix URLs broken across lines
 
-Your reference list is recognized as **one** reference. Two things combine to cause it:
+### The problem
+When a reference is copied from a PDF/Word doc, a long URL that wrapped onto the next line becomes a URL with a **space** in it, e.g.
 
-1. The list is one continuous run of text — no line breaks between references. (PDF text extraction in `file-extract.ts` joins everything with spaces, and your pasted version is also a single paragraph.)
-2. `parseReferences()` in `src/lib/parse-references.ts` splits **only on newlines**. With no newlines, the entire block becomes a single entry.
-
-## Fix
-
-Add run-on splitting to `src/lib/parse-references.ts` so a block containing multiple references is broken apart by detecting each reference's date signature (`(2021, March 2)`, `(2024)`, `(n.d.)`, etc.), which marks the start of every APA entry.
-
-### How it works
-
-- After the existing newline-based grouping, post-process each entry: if it contains **2 or more** date signatures, split it; otherwise leave it unchanged. This works for both single-line PDF text and already-split lists.
-- For each date after the first, find the boundary by walking backward from `(` over the preceding tokens, collecting author-like tokens (Title Case, initials, commas) and **stopping** at a URL-ish token (`://`, `/`, `www.`, `.com/.org/.au/.pdf…`, digits, or lowercase-leading). The split point is the start of the author phrase — this keeps each reference's full URL intact.
-- Add a guard so slug-like fragments from broken URLs (tokens with 2+ internal hyphens, e.g. `Research-Collaboration-Project`) also stop the scan, while normal hyphenated surnames (e.g. `Smith-Jones`) are preserved.
-
-### Verified result on your sample
-
-Splits correctly into **6** references:
-
-```text
-[1] AAS. (2021, March 2)…science-climate-change
-[2] ABS. (2024, December 6)…/2446/244634
-[3] Australian Government. (2025, July 15)…ocean-climate connection
-[4] IPCC. (2023, May 18)…IPCC_AR6_SYR_SPM.pdf
-[5] Queensland Governement. (2024, August 2)…/Mangrove Research-Collaboration-Project
-[6] Rob Moir, P. (2025, May 20)…by-caleb-leonard/
+```
+https://www.goldcoast.qld.gov.au/Services/Projects-works/Mangrove Research-Collaboration-Project
 ```
 
-Each entry keeps its own URL so the existing liveness/Wayback checks run per reference.
+Two things go wrong today:
+1. The URL extractor stops at the first space, so only `…/Mangrove` is checked → false "dead link".
+2. The existing repair in `parse-references.ts` rejoins the pieces with **nothing** (`Mangrove` + `Research` → `MangroveResearch`), which is also wrong.
 
-### Notes / caveats
+I tested the four URLs from your assignment against the live sites: word processors break long URLs **at a hyphen and drop it**, so rejoining the pieces with a hyphen restores the real link. Result of the test:
 
-- These URLs already contain spaces (broken by the PDF/copy, e.g. `ocean-climate connection`). The existing cleanup that rejoins `https://… lowercase-fragment` handles most; some government URLs with spaces may still need the "confirm manually" verdict — that behavior is unchanged.
-- No changes to verdict logic, `reference-check.functions.ts`, or any UI. This is purely the parsing step.
+```text
+hyphen-join  -> 200  goldcoast … /Mangrove-Research-Collaboration-Project
+hyphen-join  -> 200  oceanriver … /…-between-mangroves-and-marine-life-…
+hyphen-join  -> 200  science.org.au/our-focus/science-everyone/…
+hyphen-join  -> path correct (abs.gov.au/…/osca-occupation-standard-classification-australia/…)
+empty-join   -> 404  (current behaviour)
+```
 
-## Scope
+So the fix is: **rejoin wrapped URL fragments with a hyphen.**
 
-- **File changed:** `src/lib/parse-references.ts` only.
-- Verify by running the parser against your pasted sample (expect 6 entries) and re-checking that newline-separated lists still parse as before.
+### The change
+Edit only `src/lib/parse-references.ts` (shared by both the authenticity checker and the format checker — no other files touched).
+
+Replace the current space-removing URL repair (the `\s+([a-z0-9%]…)` → `$1$2` step) with a small `mergeWrappedUrl` helper that, for each entry:
+- Finds a `https?://…` token followed by a space and a continuation fragment.
+- Rejoins them with `-` instead of deleting the space.
+- Repeats until no more merges (handles URLs that wrapped multiple times).
+
+To avoid swallowing legitimate trailing text after a URL, a fragment is only merged when it looks like a URL path piece:
+- it contains a `-` or `/` (every real case above does), **or**
+- it is entirely lowercase (a mid-word wrap),
+- and it does **not** start with `(` or other sentence punctuation.
+
+This also fixes the current bug where an **uppercase** continuation (`/Mangrove Research…`) was never merged at all, because the old regex only accepted lowercase continuations.
+
+### Why this is safe
+- `splitRunOn` still runs first, so each entry is already a single reference before URL repair — there is no adjacent reference whose author could be pulled into the URL.
+- No changes to verdict logic, the HTTP/Wayback checks, server functions, or any UI.
+- The HTTP check + Wayback fallback still handles any URL that a single hyphen-join doesn't perfectly reconstruct (e.g. a deep path that has since moved).
+
+### Verification
+Run the parser on your exact assignment text and confirm:
+- 6 references are returned, each with a single space-free URL.
+- The Gold Coast, Ocean River, and Australian Academy of Science URLs resolve (HTTP 200) and the ABS path is correctly hyphenated.

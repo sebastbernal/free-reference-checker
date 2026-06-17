@@ -58,13 +58,28 @@ export function parseReferences(raw: string): string[] {
 
   return entries
     .flatMap(splitRunOn)
-    .map((e) =>
-      e
-        .replace(/(https?:\/\/\S+)\s+([a-z0-9%][^\s]*)/g, "$1$2")
-        .replace(/\s+/g, " ")
-        .trim(),
-    )
+    .map((e) => mergeWrappedUrl(e.replace(/\s+/g, " ").trim()))
     .filter(Boolean);
+}
+
+// Rejoin a URL that wrapped across lines (now a space inside the URL). Word
+// processors break long URLs at a hyphen and drop it, so the correct repair is
+// to rejoin the fragments with "-", not to delete the space.
+//
+// A fragment after the space is only merged when it looks like a URL path
+// piece: it contains "-" or "/", or it is entirely lowercase (a mid-word wrap).
+// Fragments starting with sentence punctuation (e.g. "(Accessed…") are left
+// alone so trailing prose after a URL isn't swallowed.
+function mergeWrappedUrl(entry: string): string {
+  const re =
+    /(https?:\/\/[^\s]+)\s+([A-Za-z0-9%](?:[A-Za-z0-9%._~#?&=+/-]*[-/][A-Za-z0-9%._~#?&=+/-]*|[a-z0-9%._~#?&=+]*))/;
+  let prev: string;
+  let out = entry;
+  do {
+    prev = out;
+    out = out.replace(re, (_m, url: string, frag: string) => `${url}-${frag}`);
+  } while (out !== prev);
+  return out;
 }
 
 // A reference's date signature: "(2021, March 2)", "(2024)", "(n.d.)".
