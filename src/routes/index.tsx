@@ -297,6 +297,8 @@ function Index() {
     results,
     verifiedText,
     filter,
+    typeFilter,
+    elementFilter,
     formatStyle,
     formatResults,
     formattedText,
