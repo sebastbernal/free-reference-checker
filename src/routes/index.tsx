@@ -620,7 +620,7 @@ function Index() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={
-                  "Paste your references here, or drag & drop a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx"
+                  "Paste your references here, or drag & drop a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work."
                 }
                 className={cn(
                   "min-h-48 font-mono text-sm",
