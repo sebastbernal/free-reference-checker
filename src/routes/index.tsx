@@ -389,6 +389,7 @@ function Index() {
     const out = checkFormatting(text, style);
     setFormatResults(out);
     setFormattedText(text);
+    setElementFilter("all");
     setFormatStep("done");
     if (!out.length) {
       toast.error("No references found in the text.");
