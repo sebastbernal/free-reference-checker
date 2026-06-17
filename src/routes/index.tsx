@@ -171,6 +171,7 @@ function Index() {
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
           activeView?: "verify" | "format" | null;
+          formatStep?: "idle" | "selecting" | "done";
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
@@ -179,6 +180,15 @@ function Index() {
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
         if (saved.activeView) setActiveView(saved.activeView);
+        if (saved.formatStep) {
+          setFormatStep(saved.formatStep);
+        } else if (saved.activeView === "format") {
+          setFormatStep(
+            Array.isArray(saved.formatResults) && saved.formatResults.length
+              ? "done"
+              : "selecting",
+          );
+        }
       }
     } catch {
       // ignore corrupt storage
