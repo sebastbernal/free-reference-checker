@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { FormatResultCard } from "@/components/FormatResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
