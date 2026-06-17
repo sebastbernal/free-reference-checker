@@ -346,6 +346,7 @@ function Index() {
     }
     setResults(null);
     setFilter("all");
+    setTypeFilter("all");
     mutation.mutate(text);
   };
 
