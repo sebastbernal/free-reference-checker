@@ -256,6 +256,7 @@ function Index() {
       return;
     }
     setActiveView("verify");
+    setFormatStep("idle");
     setResults(null);
     setFilter("all");
     mutation.mutate(text);
