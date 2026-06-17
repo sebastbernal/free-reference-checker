@@ -403,6 +403,7 @@ async function runPool(refs: string[]): Promise<ReferenceResult[]> {
           wayback: "",
           verdict: "inconclusive",
           notes: `Error: ${(e as Error).message}`,
+          aiTrace: "",
         };
       }
     }
