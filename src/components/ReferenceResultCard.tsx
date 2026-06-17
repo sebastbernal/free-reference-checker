@@ -90,6 +90,12 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
               {result.source && (
                 <Badge variant="secondary">{result.source}</Badge>
               )}
+              {result.aiTrace && (
+                <Badge className="gap-1 border-0 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
+                  <Bot className="h-3.5 w-3.5" />
+                  AI trace
+                </Badge>
+              )}
             </div>
             {result.titleScore !== null && (
               <span className="text-xs text-muted-foreground">
