@@ -148,6 +148,9 @@ function Index() {
   const [activeView, setActiveView] = useState<"verify" | "format" | null>(
     null,
   );
+  const [formatStep, setFormatStep] = useState<"idle" | "selecting" | "done">(
+    "idle",
+  );
   const [restored, setRestored] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -168,6 +171,7 @@ function Index() {
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
           activeView?: "verify" | "format" | null;
+          formatStep?: "idle" | "selecting" | "done";
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
@@ -176,6 +180,15 @@ function Index() {
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
         if (saved.activeView) setActiveView(saved.activeView);
+        if (saved.formatStep) {
+          setFormatStep(saved.formatStep);
+        } else if (saved.activeView === "format") {
+          setFormatStep(
+            Array.isArray(saved.formatResults) && saved.formatResults.length
+              ? "done"
+              : "selecting",
+          );
+        }
       }
     } catch {
       // ignore corrupt storage
@@ -196,6 +209,7 @@ function Index() {
           formatStyle,
           formatResults,
           activeView,
+          formatStep,
         }),
       );
     } catch {
@@ -209,6 +223,7 @@ function Index() {
     formatStyle,
     formatResults,
     activeView,
+    formatStep,
   ]);
 
   const scrollToResults = (ref: RefObject<HTMLDivElement | null>) => {
@@ -241,6 +256,7 @@ function Index() {
       return;
     }
     setActiveView("verify");
+    setFormatStep("idle");
     setResults(null);
     setFilter("all");
     mutation.mutate(text);
@@ -269,8 +285,15 @@ function Index() {
       return;
     }
     setActiveView("format");
-    const out = checkFormatting(text, formatStyle);
+    setFormatResults(null);
+    setFormatStep("selecting");
+  };
+
+  const handleSelectStyle = (style: CitationStyle) => {
+    setFormatStyle(style);
+    const out = checkFormatting(text, style);
     setFormatResults(out);
+    setFormatStep("done");
     if (!out.length) {
       toast.error("No references found in the text.");
     } else {
@@ -409,21 +432,6 @@ function Index() {
               Supports .txt, .docx and .pdf uploads · up to 100 references.
             </p>
 
-            <div className="mt-4 border-t pt-4">
-              <p className="text-sm font-medium">Citation style (for formatting check)</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {STYLE_OPTIONS.map((s) => (
-                  <Button
-                    key={s.value}
-                    variant={formatStyle === s.value ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFormatStyle(s.value)}
-                  >
-                    {s.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <Button
@@ -448,8 +456,34 @@ function Index() {
                 Check formatting
               </Button>
             </div>
+
+            {activeView === "format" &&
+              (formatStep === "selecting" || formatStep === "done") && (
+                <div className="mt-4 rounded-lg border bg-muted/30 p-4">
+                  <p className="text-sm font-medium">
+                    Select a citation style to run the formatting check
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {STYLE_OPTIONS.map((s) => (
+                      <Button
+                        key={s.value}
+                        variant={
+                          formatStep === "done" && formatStyle === s.value
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() => handleSelectStyle(s.value)}
+                      >
+                        {s.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
           </CardContent>
         </Card>
+
 
         {activeView === "verify" && mutation.isPending && (
           <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
