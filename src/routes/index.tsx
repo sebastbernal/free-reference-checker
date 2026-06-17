@@ -413,6 +413,7 @@ function Index() {
     setResults(null);
     setVerifiedText("");
     setFilter("all");
+    setTypeFilter("all");
     setText("");
     try {
       sessionStorage.removeItem(STORAGE_KEY);
@@ -424,6 +425,7 @@ function Index() {
   const clearFormat = () => {
     setFormatResults(null);
     setFormattedText("");
+    setElementFilter("all");
     setFormatStep("selecting");
   };
 
