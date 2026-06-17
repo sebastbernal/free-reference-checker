@@ -428,6 +428,7 @@ function Index() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <Button
                 className="flex-1"
+                variant={activeView === "verify" ? "default" : "outline"}
                 onClick={handleCheck}
                 disabled={mutation.isPending}
               >
@@ -440,7 +441,7 @@ function Index() {
               </Button>
               <Button
                 className="flex-1"
-                variant="secondary"
+                variant={activeView === "format" ? "default" : "outline"}
                 onClick={handleCheckFormat}
               >
                 <ListChecks className="h-4 w-4" />
