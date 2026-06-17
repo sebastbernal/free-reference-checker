@@ -1,29 +1,41 @@
-# Fix flickering 403/404 verdicts via a more reliable archive lookup
+## Problem
 
-## What's actually happening
+Your reference list is recognized as **one** reference. Two things combine to cause it:
 
-I reproduced both cases against the live Internet Archive API.
+1. The list is one continuous run of text — no line breaks between references. (PDF text extraction in `file-extract.ts` joins everything with spaces, and your pasted version is also a single paragraph.)
+2. `parseReferences()` in `src/lib/parse-references.ts` splits **only on newlines**. With no newlines, the entire block becomes a single entry.
 
-**Griffith** — the page now returns **HTTP 403**. It "worked before" because its server used to let our automated request through; it has since started blocking bots. On a 403 we fall back to the archive. Griffith *does* have snapshots (confirmed: captures through 2026), so the **correct** verdict is amber "check / confirm manually" — **not** red. A 403 is only a red flag when there is genuinely **no** snapshot.
+## Fix
 
-**IPCC** — the page returns **HTTP 404**. It showed **"inconclusive"** because the archive lookup **timed out** and returned `error:` instead of a clean yes/no.
+Add run-on splitting to `src/lib/parse-references.ts` so a block containing multiple references is broken apart by detecting each reference's date signature (`(2021, March 2)`, `(2024)`, `(n.d.)`, etc.), which marks the start of every APA entry.
 
-**Root cause for both:** the Wayback CDX query latency is wildly variable (measured 2s–30s for the same URL) and regularly exceeds the 15s timeout, returning `error:`. That `error:` then collapses otherwise-clear results into soft, flickering verdicts.
+### How it works
 
-## The fix (lookup only — verdict logic unchanged)
+- After the existing newline-based grouping, post-process each entry: if it contains **2 or more** date signatures, split it; otherwise leave it unchanged. This works for both single-line PDF text and already-split lists.
+- For each date after the first, find the boundary by walking backward from `(` over the preceding tokens, collecting author-like tokens (Title Case, initials, commas) and **stopping** at a URL-ish token (`://`, `/`, `www.`, `.com/.org/.au/.pdf…`, digits, or lowercase-leading). The split point is the start of the author phrase — this keeps each reference's full URL intact.
+- Add a guard so slug-like fragments from broken URLs (tokens with 2+ internal hyphens, e.g. `Research-Collaboration-Project`) also stop the scan, while normal hyphenated surnames (e.g. `Smith-Jones`) are preserved.
 
-### Harden the archive lookup (`waybackCheck`, `src/lib/reference-sources.server.ts`)
-- Give it its own dedicated timeout of **30s per attempt**.
-- **Two attempts total** (1 initial + 1 retry) on timeout/network error, for a **1-minute total wait** budget before giving up.
-- Keep the existing CDX query and the three return shapes unchanged: `snapshot exists (YYYY)`, `NO snapshot ever`, `error: <name>`.
+### Verified result on your sample
 
-That's the only change. The verdict mapping in `src/lib/reference-check.functions.ts` stays exactly as it is — including the existing **`inconclusive`** result for a dead page whose archive can't be confirmed.
+Splits correctly into **6** references:
 
-## Outcome
-- The archive lookup returns a real yes/no far more often, so verdicts stop flickering.
-- **Griffith (403, has snapshot):** stable amber "check — server blocked us, an archived snapshot exists, confirm manually".
-- **IPCC (404):** when the slow lookup now succeeds, it resolves to its real verdict (`archived` if a snapshot exists, `no-trace` if none); only a genuine archive failure still falls back to `inconclusive` as before.
+```text
+[1] AAS. (2021, March 2)…science-climate-change
+[2] ABS. (2024, December 6)…/2446/244634
+[3] Australian Government. (2025, July 15)…ocean-climate connection
+[4] IPCC. (2023, May 18)…IPCC_AR6_SYR_SPM.pdf
+[5] Queensland Governement. (2024, August 2)…/Mangrove Research-Collaboration-Project
+[6] Rob Moir, P. (2025, May 20)…by-caleb-leonard/
+```
 
-## Technical notes
-- Only one file changes: `src/lib/reference-sources.server.ts` (30s timeout + one retry, 2 attempts / ~60s total, in `waybackCheck`).
-- No changes to `reference-check.functions.ts` or `ReferenceResultCard.tsx`.
+Each entry keeps its own URL so the existing liveness/Wayback checks run per reference.
+
+### Notes / caveats
+
+- These URLs already contain spaces (broken by the PDF/copy, e.g. `ocean-climate connection`). The existing cleanup that rejoins `https://… lowercase-fragment` handles most; some government URLs with spaces may still need the "confirm manually" verdict — that behavior is unchanged.
+- No changes to verdict logic, `reference-check.functions.ts`, or any UI. This is purely the parsing step.
+
+## Scope
+
+- **File changed:** `src/lib/parse-references.ts` only.
+- Verify by running the parser against your pasted sample (expect 6 entries) and re-checking that newline-separated lists still parse as before.
