@@ -244,6 +244,8 @@ function Index() {
         if (typeof saved.verifiedText === "string")
           setVerifiedText(saved.verifiedText);
         if (saved.filter) setFilter(saved.filter);
+        if (saved.typeFilter) setTypeFilter(saved.typeFilter);
+        if (saved.elementFilter) setElementFilter(saved.elementFilter);
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
