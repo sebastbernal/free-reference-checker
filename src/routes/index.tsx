@@ -891,8 +891,9 @@ function Index() {
                       </li>
                       <li>
                         <span className="font-medium text-foreground">Check</span>{" "}
-                        — found but the title only partly matches; verify
-                        manually.
+                        — needs a manual look: a partial title match, a live page
+                        that looks outdated, or a link that responds but blocks
+                        automated verification.
                       </li>
                       <li>
                         <span className="font-medium text-foreground">
