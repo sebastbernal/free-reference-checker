@@ -698,6 +698,33 @@ function Index() {
               })}
             </div>
 
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Source type:
+              </span>
+              {TYPE_FILTERS.map((t) => {
+                const count =
+                  t.value === "all" ? counts.total : typeCounts[t.value] ?? 0;
+                if (t.value !== "all" && count === 0) return null;
+                const active = typeFilter === t.value;
+                return (
+                  <Button
+                    key={t.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTypeFilter(t.value)}
+                  >
+                    {t.label}
+                    <span
+                      className={cn("ml-1", active ? "opacity-80" : "opacity-70")}
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="mt-4 space-y-3">
               {filteredResults.map((r) => (
                 <ReferenceResultCard key={r.n} result={r} />
