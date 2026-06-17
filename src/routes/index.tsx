@@ -82,6 +82,18 @@ IPCC (2023). Climate change synthesis report. https://www.ipcc.ch/report/ar6/syr
 World Health Organization (2009). Pandemic influenza preparedness archived page. https://www.who.int/this-page-no-longer-exists-12345
 Kahneman, D. (2011). Thinking, fast and slow. Farrar, Straus and Giroux.`;
 
+const FORMAT_EXAMPLE = `Smith, J., & Doe, A. (2021). Understanding citation styles. Journal of Academic Writing. https://doi.org/10.1234/jaw.2021.001
+Brown, Michael and Lee, Sarah. (2019). A guide to referencing 2019. Academic Press.
+World Health Organization (2023). Global health report. https://www.who.int/reports/global-health
+Johnson, R. The history of quotation marks. Oxford University Press.`;
+
+const STYLE_OPTIONS: { value: CitationStyle; label: string }[] = [
+  { value: "apa7", label: STYLE_LABELS.apa7 },
+  { value: "mla9", label: STYLE_LABELS.mla9 },
+  { value: "harvard", label: STYLE_LABELS.harvard },
+  { value: "chicago17", label: STYLE_LABELS.chicago17 },
+];
+
 const VERDICT_ORDER: Record<string, number> = {
   "no-trace": 0,
   check: 1,
