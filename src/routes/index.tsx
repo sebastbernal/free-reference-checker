@@ -348,6 +348,7 @@ function Index() {
 
   const clearAll = () => {
     setResults(null);
+    setVerifiedText("");
     setFilter("all");
     setText("");
     try {
@@ -359,6 +360,8 @@ function Index() {
 
   const clearFormat = () => {
     setFormatResults(null);
+    setFormattedText("");
+    setFormatStep("selecting");
   };
 
   const formatCounts = formatResults
