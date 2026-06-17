@@ -599,6 +599,19 @@ function Index() {
               Supports .txt, .docx and .pdf uploads · up to 100 references.
             </p>
 
+            <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
+              <p>
+                <span className="font-medium text-foreground">Your privacy:</span>{" "}
+                Uploaded files are processed entirely in your browser — they are
+                never uploaded to or stored on any server. Only the extracted
+                reference text is sent to third-party scholarly APIs (CrossRef,
+                Semantic Scholar, OpenAlex, arXiv, DBLP) and link-checking
+                services during verification.
+              </p>
+            </div>
+
+
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               {mutation.isPending ? (
