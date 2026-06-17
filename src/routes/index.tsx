@@ -7,6 +7,7 @@ import {
   FileText,
   Heart,
   Info,
+  ListChecks,
   Loader2,
   ScanSearch,
   ShieldCheck,
@@ -18,13 +19,21 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
+import { FormatResultCard } from "@/components/FormatResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
 import {
   checkReferences,
   type ReferenceResult,
   type Verdict,
 } from "@/lib/reference-check.functions";
+import {
+  checkFormatting,
+  STYLE_LABELS,
+  type CitationStyle,
+  type FormatResult,
+} from "@/lib/format-check";
 
 const STORAGE_KEY = "reference-checker-state";
 
