@@ -219,6 +219,7 @@ function Index() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyResultsRef = useRef<HTMLDivElement>(null);
   const formatResultsRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const checkFn = useServerFn(checkReferences);
 
   // Restore previous session state after mount (avoids SSR mismatch).
