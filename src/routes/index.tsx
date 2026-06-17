@@ -343,287 +343,229 @@ function Index() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-8 pb-24">
-        <Tabs
-          value={tab}
-          onValueChange={(v) => setTab(v as "verify" | "format")}
-        >
-          <TabsList className="mb-6 grid w-full grid-cols-2">
-            <TabsTrigger value="verify" className="gap-1.5">
-              <ShieldCheck className="h-4 w-4" />
-              Verify authenticity
-            </TabsTrigger>
-            <TabsTrigger value="format" className="gap-1.5">
-              <ListChecks className="h-4 w-4" />
-              Check formatting
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="verify">
-            <Card>
-              <CardContent className="p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <label htmlFor="refs" className="text-sm font-medium">
-                    Paste reference(s)
-                  </label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setText(EXAMPLE)}
-                    >
-                      Try example
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="h-4 w-4" />
-                      Upload
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".txt,.docx,.pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleFile(f, setText);
-                        e.target.value = "";
-                      }}
-                    />
-                  </div>
-                </div>
-                <Textarea
-                  id="refs"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder={
-                    "One reference per entry. APA, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx"
-                  }
-                  className="min-h-48 font-mono text-sm"
+        <Card>
+          <CardContent className="p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <label htmlFor="refs" className="text-sm font-medium">
+                Paste reference(s)
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setText(EXAMPLE)}
+                >
+                  Try example
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".txt,.docx,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleFile(f, setText);
+                    e.target.value = "";
+                  }}
                 />
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Supports .txt, .docx and .pdf uploads · up to 100
-                    references.
-                  </p>
-                  <Button onClick={handleCheck} disabled={mutation.isPending}>
-                    {mutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ScanSearch className="h-4 w-4" />
-                    )}
-                    {mutation.isPending ? "Checking…" : "Check references"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {mutation.isPending && (
-              <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Verifying references across databases and live links…
-              </p>
-            )}
-
-            {counts && (
-              <div className="mt-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <span className="font-medium">{counts.total} checked</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      {counts.real} real
-                    </span>
-                    <span className="text-amber-600 dark:text-amber-400">
-                      {counts.flagged} flagged
-                    </span>
-                    {counts.offline > 0 && (
-                      <span className="text-muted-foreground">
-                        {counts.offline} offline
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={downloadCsv}>
-                      <FileText className="h-4 w-4" />
-                      Export CSV
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={clearAll}>
-                      <Trash2 className="h-4 w-4" />
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {FILTERS.map((f) => {
-                    const count =
-                      f.value === "all"
-                        ? counts.total
-                        : verdictCounts[f.value] ?? 0;
-                    if (f.value !== "all" && count === 0) return null;
-                    const active = filter === f.value;
-                    return (
-                      <Button
-                        key={f.value}
-                        variant={active ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setFilter(f.value)}
-                      >
-                        {f.label}
-                        <span
-                          className={
-                            active
-                              ? "ml-1 text-primary-foreground/80"
-                              : "ml-1 text-muted-foreground"
-                          }
-                        >
-                          {count}
-                        </span>
-                      </Button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {filteredResults.map((r) => (
-                    <ReferenceResultCard key={r.n} result={r} />
-                  ))}
-                  {filteredResults.length === 0 && (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                      No references match this filter.
-                    </p>
-                  )}
-                </div>
-
-                <p className="mt-6 text-center text-xs text-muted-foreground">
-                  This tool may occasionally misclassify authentic references —
-                  always double-check flagged items manually.
-                </p>
               </div>
-            )}
-          </TabsContent>
+            </div>
+            <Textarea
+              id="refs"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={
+                "One reference per entry. APA, numbered or plain text all work, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx"
+              }
+              className="min-h-48 font-mono text-sm"
+            />
+            <p className="mt-3 text-xs text-muted-foreground">
+              Supports .txt, .docx and .pdf uploads · up to 100 references.
+            </p>
 
-          <TabsContent value="format">
-            <Card>
-              <CardContent className="p-4">
-                <div className="mb-3">
-                  <p className="text-sm font-medium">Citation style</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {STYLE_OPTIONS.map((s) => (
-                      <Button
-                        key={s.value}
-                        variant={
-                          formatStyle === s.value ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setFormatStyle(s.value)}
-                      >
-                        {s.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-2 flex items-center justify-between">
-                  <label htmlFor="format-refs" className="text-sm font-medium">
-                    Paste reference(s)
-                  </label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFormatText(FORMAT_EXAMPLE)}
-                    >
-                      Try example
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => formatFileInputRef.current?.click()}
-                    >
-                      <Upload className="h-4 w-4" />
-                      Upload
-                    </Button>
-                    <input
-                      ref={formatFileInputRef}
-                      type="file"
-                      accept=".txt,.docx,.pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleFile(f, setFormatText);
-                        e.target.value = "";
-                      }}
-                    />
-                  </div>
-                </div>
-                <Textarea
-                  id="format-refs"
-                  value={formatText}
-                  onChange={(e) => setFormatText(e.target.value)}
-                  placeholder={
-                    "One reference per entry. Paste them as they appear in your document, e.g.\n\nSmith, J. (2024). Title of the article. Journal Name. https://doi.org/10.xxxx/xxxx"
-                  }
-                  className="min-h-48 font-mono text-sm"
-                />
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Checks {STYLE_LABELS[formatStyle]} formatting · runs
-                    in-browser, nothing is sent anywhere.
-                  </p>
-                  <Button onClick={handleCheckFormat}>
-                    <ListChecks className="h-4 w-4" />
-                    Check formatting
+            <div className="mt-4 border-t pt-4">
+              <p className="text-sm font-medium">Citation style (for formatting check)</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {STYLE_OPTIONS.map((s) => (
+                  <Button
+                    key={s.value}
+                    variant={formatStyle === s.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFormatStyle(s.value)}
+                  >
+                    {s.label}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {formatCounts && (
-              <div className="mt-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <span className="font-medium">
-                      {formatCounts.total} checked
-                    </span>
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      {formatCounts.green} perfect
-                    </span>
-                    <span className="text-amber-600 dark:text-amber-400">
-                      {formatCounts.yellow} need work
-                    </span>
-                    <span className="text-red-600 dark:text-red-400">
-                      {formatCounts.red} bad
-                    </span>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={clearFormat}>
-                    <Trash2 className="h-4 w-4" />
-                    Clear
-                  </Button>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {formatResults?.map((r) => (
-                    <FormatResultCard key={r.n} result={r} />
-                  ))}
-                  {formatResults?.length === 0 && (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                      No references found in the text.
-                    </p>
-                  )}
-                </div>
-
-                <p className="mt-6 text-center text-xs text-muted-foreground">
-                  Formatting checks are heuristic and can't see italics in
-                  pasted text — treat the ideal version as a guide, not a final
-                  answer.
-                </p>
+                ))}
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Button
+                className="flex-1"
+                onClick={handleCheck}
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4" />
+                )}
+                {mutation.isPending ? "Checking…" : "Verify authenticity"}
+              </Button>
+              <Button
+                className="flex-1"
+                variant="secondary"
+                onClick={handleCheckFormat}
+              >
+                <ListChecks className="h-4 w-4" />
+                Check formatting
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {mutation.isPending && (
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Verifying references across databases and live links…
+          </p>
+        )}
+
+        {counts && (
+          <div className="mt-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  Authenticity
+                </span>
+                <span className="text-muted-foreground">·</span>
+                <span className="font-medium">{counts.total} checked</span>
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  {counts.real} real
+                </span>
+                <span className="text-amber-600 dark:text-amber-400">
+                  {counts.flagged} flagged
+                </span>
+                {counts.offline > 0 && (
+                  <span className="text-muted-foreground">
+                    {counts.offline} offline
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={downloadCsv}>
+                  <FileText className="h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button variant="ghost" size="sm" onClick={clearAll}>
+                  <Trash2 className="h-4 w-4" />
+                  Clear
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {FILTERS.map((f) => {
+                const count =
+                  f.value === "all"
+                    ? counts.total
+                    : verdictCounts[f.value] ?? 0;
+                if (f.value !== "all" && count === 0) return null;
+                const active = filter === f.value;
+                return (
+                  <Button
+                    key={f.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(f.value)}
+                  >
+                    {f.label}
+                    <span
+                      className={
+                        active
+                          ? "ml-1 text-primary-foreground/80"
+                          : "ml-1 text-muted-foreground"
+                      }
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {filteredResults.map((r) => (
+                <ReferenceResultCard key={r.n} result={r} />
+              ))}
+              {filteredResults.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No references match this filter.
+                </p>
+              )}
+            </div>
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              This tool may occasionally misclassify authentic references —
+              always double-check flagged items manually.
+            </p>
+          </div>
+        )}
+
+        {formatCounts && (
+          <div className="mt-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <ListChecks className="h-4 w-4 text-primary" />
+                  {STYLE_LABELS[formatStyle]} formatting
+                </span>
+                <span className="text-muted-foreground">·</span>
+                <span className="font-medium">
+                  {formatCounts.total} checked
+                </span>
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  {formatCounts.green} perfect
+                </span>
+                <span className="text-amber-600 dark:text-amber-400">
+                  {formatCounts.yellow} need work
+                </span>
+                <span className="text-red-600 dark:text-red-400">
+                  {formatCounts.red} bad
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={clearFormat}>
+                <Trash2 className="h-4 w-4" />
+                Clear
+              </Button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {formatResults?.map((r) => (
+                <FormatResultCard key={r.n} result={r} />
+              ))}
+              {formatResults?.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No references found in the text.
+                </p>
+              )}
+            </div>
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Formatting checks are heuristic and can't see italics in pasted
+              text — treat the ideal version as a guide, not a final answer.
+            </p>
+          </div>
+        )}
 
         <div className="mt-10 rounded-lg border px-4">
           <button
