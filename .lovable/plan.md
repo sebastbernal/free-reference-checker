@@ -1,21 +1,10 @@
-## Update floating support button
+Add a hardcoded version number and an auto-generated build date to the existing footer in `src/routes/index.tsx`.
 
-Replace the single PayPal link in the fixed bottom bar with a layout that offers both PayPal and a card-payment option, using a generic label most users will recognise.
+1. Near the top of the component/module scope, add two constants:
+   - `const VERSION = "1.0.0";` (hardcoded — update manually when desired)
+   - `const BUILD_DATE = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });` (evaluated once at module load, giving a stable build-time date)
 
-### Changes
-1. In `src/routes/index.tsx`, replace the single `<a>` PayPal button (lines 628-637) with a floating pill containing:
-   - A leading heart icon + "Support this tool" label.
-   - Two side-by-side text links:
-     - **PayPal** → `https://paypal.me/sebastbernal`
-     - **Card** → `https://buymeacoffee.com/sebastbernal` (Buy Me a Coffee accepts cards without an account; the generic label is clearer for users unfamiliar with the brand).
-   - Both links open in a new tab (`target="_blank" rel="noopener noreferrer"`).
-2. Keep the existing styling approach: rounded-full pill shape, rose-600 background, white text, shadow, hover scale, focus ring. Separate the two links with a subtle vertical divider (`border-white/30`) and a small gap.
+2. Update the footer element (currently lines 619–624) to include the version and last-updated info, e.g.:
+   `Sebastian Bernal Garcia · MIT License · 2026 · v1.0.0 · Updated Jun 17, 2026`
 
-### Visual approach
-```text
-[♥ Support this tool | PayPal · Card]
-```
-
-### Out of scope
-- No new packages needed.
-- No backend changes.
+Keep existing footer styling and layout intact.
