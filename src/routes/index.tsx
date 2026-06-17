@@ -540,7 +540,7 @@ function Index() {
           </div>
         )}
 
-        {formatCounts && (
+        {activeView === "format" && formatCounts && (
           <div ref={formatResultsRef} className="mt-8 scroll-mt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
