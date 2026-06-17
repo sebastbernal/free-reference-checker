@@ -252,11 +252,12 @@ function Index() {
 
   const mutation = useMutation({
     mutationFn: (input: string) => checkFn({ data: { text: input } }),
-    onSuccess: (data) => {
+    onSuccess: (data, input) => {
       const sorted = [...data.results].sort(
         (a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict],
       );
       setResults(sorted);
+      setVerifiedText(input);
       if (!data.results.length) {
         toast.error("No references found in the text.");
       } else {
