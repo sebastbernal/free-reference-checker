@@ -30,8 +30,10 @@ import {
 } from "@/lib/reference-check.functions";
 import {
   checkFormatting,
+  ELEMENT_TYPE_LABELS,
   STYLE_LABELS,
   type CitationStyle,
+  type ElementType,
   type FormatResult,
 } from "@/lib/format-check";
 
