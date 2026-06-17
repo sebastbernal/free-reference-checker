@@ -493,11 +493,11 @@ function Index() {
           <div className="flex items-center gap-2 text-primary">
             <ShieldCheck className="h-6 w-6" />
             <span className="text-sm font-semibold uppercase tracking-wide">
-              Free Reference Checker
+              Reference Checker
             </span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Free reference authenticity and citation format checker
+            Check reference authenticity and citation format
           </h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
             Paste a reference list or upload a file. Citations are verified for
