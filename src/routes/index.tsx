@@ -195,6 +195,7 @@ function Index() {
           filter,
           formatStyle,
           formatResults,
+          activeView,
         }),
       );
     } catch {
@@ -207,6 +208,7 @@ function Index() {
     filter,
     formatStyle,
     formatResults,
+    activeView,
   ]);
 
   const scrollToResults = (ref: RefObject<HTMLDivElement | null>) => {
