@@ -9,6 +9,27 @@ export type CitationStyle = "apa7" | "mla9" | "harvard" | "chicago17";
 
 export type Grade = "green" | "yellow" | "red";
 
+export type ElementType =
+  | "journal-article"
+  | "conference-paper"
+  | "book"
+  | "book-chapter"
+  | "report"
+  | "website"
+  | "thesis"
+  | "other";
+
+export const ELEMENT_TYPE_LABELS: Record<ElementType, string> = {
+  "journal-article": "Journal article",
+  "conference-paper": "Conference paper",
+  book: "Book",
+  "book-chapter": "Book chapter",
+  report: "Report",
+  website: "Website",
+  thesis: "Thesis",
+  other: "Other",
+};
+
 export interface FormatIssue {
   snippet: string; // substring of the original reference to highlight ("" = none)
   problem: string;
@@ -20,6 +41,7 @@ export interface FormatResult {
   reference: string;
   style: CitationStyle;
   grade: Grade;
+  elementType: ElementType;
   ideal: string;
   issues: FormatIssue[];
 }
