@@ -91,7 +91,7 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
                 <Badge variant="secondary">{result.source}</Badge>
               )}
               {result.aiTrace && (
-                <Badge className="gap-1 border-0 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
+                <Badge className="gap-1 border-0 bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300">
                   <Bot className="h-3.5 w-3.5" />
                   AI trace
                 </Badge>
@@ -117,10 +117,10 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
             )}
             {result.aiTrace && (
               <div className="sm:col-span-2">
-                <dt className="inline font-medium text-red-700 dark:text-red-400">
+                <dt className="inline font-medium text-amber-700 dark:text-amber-400">
                   AI trace:{" "}
                 </dt>
-                <dd className="inline break-all text-red-700 dark:text-red-400">
+                <dd className="inline break-all text-amber-700 dark:text-amber-400">
                   {result.aiTrace}
                 </dd>
               </div>
