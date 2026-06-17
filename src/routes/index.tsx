@@ -666,11 +666,6 @@ function Index() {
                 </p>
               )}
             </div>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Formatting checks are heuristic and can't see italics in pasted
-              text — treat the ideal version as a guide, not a final answer.
-            </p>
           </div>
         )}
 
