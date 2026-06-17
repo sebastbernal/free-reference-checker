@@ -627,21 +627,17 @@ function Index() {
                     : verdictCounts[f.value] ?? 0;
                 if (f.value !== "all" && count === 0) return null;
                 const active = filter === f.value;
+                const color = FILTER_COLORS[f.value];
                 return (
                   <Button
                     key={f.value}
                     variant={active ? "default" : "outline"}
                     size="sm"
+                    className={cn(active ? color.active : color.inactive)}
                     onClick={() => setFilter(f.value)}
                   >
                     {f.label}
-                    <span
-                      className={
-                        active
-                          ? "ml-1 text-primary-foreground/80"
-                          : "ml-1 text-muted-foreground"
-                      }
-                    >
+                    <span className={cn("ml-1", active ? "opacity-80" : "opacity-70")}>
                       {count}
                     </span>
                   </Button>
