@@ -122,10 +122,18 @@ function buildIdeal(p: Parts, style: CitationStyle): string {
     ? `https://doi.org/${p.doi}`
     : p.url || "";
 
+  // Normalize the author string to end with a single period (names and
+  // initials should terminate with one), then let each style add its own
+  // separators — avoids "Doe, A" and "A.." artifacts.
   const withConnector = (preferred: "&" | "and") => {
-    if (p.connector === "none") return authors;
-    const from = preferred === "&" ? /\s+and\s+/i : /\s+&\s+/;
-    return authors.replace(from, ` ${preferred} `);
+    const base =
+      p.connector === "none"
+        ? authors
+        : authors.replace(
+            preferred === "&" ? /\s+and\s+/i : /\s+&\s+/,
+            ` ${preferred} `,
+          );
+    return base.replace(/[\s.,]+$/, "") + ".";
   };
 
   switch (style) {
@@ -139,11 +147,11 @@ function buildIdeal(p: Parts, style: CitationStyle): string {
     }
     case "mla9": {
       const a = withConnector("and");
-      return `${a}. "${title}." ${year}${doiUrl ? `, ${doiUrl}` : ""}.`.trim();
+      return `${a} "${title}." ${year}${doiUrl ? `, ${doiUrl}` : ""}.`.trim();
     }
     case "chicago17": {
       const a = withConnector("and");
-      return `${a}. ${year}. "${title}."${doiUrl ? ` ${doiUrl}.` : ""}`.trim();
+      return `${a} ${year}. "${title}."${doiUrl ? ` ${doiUrl}.` : ""}`.trim();
     }
   }
 }
