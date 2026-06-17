@@ -231,6 +231,8 @@ function Index() {
           results?: ReferenceResult[] | null;
           verifiedText?: string;
           filter?: Filter;
+          typeFilter?: TypeFilter;
+          elementFilter?: ElementFilter;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
           formattedText?: string;
