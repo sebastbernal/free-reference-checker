@@ -60,7 +60,10 @@ function parseReferences(raw: string): string[] {
   // The current reference looks finished: ends with a URL (web refs often have
   // no trailing period) or with sentence/paren-terminating punctuation.
   const endsComplete = (buffer: string): boolean => {
-    const b = buffer.trim();
+    // Collapse URLs split across lines so a wrapped URL still counts as a tail.
+    const b = buffer
+      .replace(/(https?:\/\/\S+)\s+([a-z0-9%][^\s]*)/g, "$1$2")
+      .trim();
     if (!b) return false;
     if (/https?:\/\/\S+$/.test(b)) return true;
     return /[.)\]]$/.test(b);
