@@ -532,6 +532,12 @@ function Index() {
                   <Upload className="h-4 w-4" />
                   Upload
                 </Button>
+                {(text.length > 0 || results != null || formatResults != null) && (
+                  <Button variant="ghost" size="sm" onClick={clearAll}>
+                    <Trash2 className="h-4 w-4" />
+                    Clear
+                  </Button>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -664,10 +670,6 @@ function Index() {
                 <Button variant="outline" size="sm" onClick={downloadCsv}>
                   <FileText className="h-4 w-4" />
                   Export CSV
-                </Button>
-                <Button variant="ghost" size="sm" onClick={clearAll}>
-                  <Trash2 className="h-4 w-4" />
-                  Clear
                 </Button>
               </div>
             </div>
