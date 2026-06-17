@@ -1,34 +1,38 @@
-# Site Icon for Free Reference Checker
+# Fix wrapped-URL parsing for pasted references
 
-A custom minimal icon to replace the generic `ShieldCheck` lucide icon in the header and serve as the browser favicon.
+Two references failed because their URLs wrap across lines, and the parser's URL-repair logic mishandles those wraps.
 
-## Concept
+## What's wrong
 
-The app verifies that citations/references are real. A fitting minimal mark combines a **checkmark inside a rounded square**, with a subtle reference/citation cue. Direction:
+In `src/lib/parse-references.ts`, the `mergeWrappedUrl` helper rejoins a URL that broke across lines. It currently:
 
-- A rounded-square badge in the brand's deep navy (`--primary`) with a clean white checkmark, paired with a short underline "reference line" beneath it to evoke a verified citation entry.
+1. **Inserts a hyphen** at every wrap point (unless the line already ended in `-`). When a URL simply wraps mid-word, this corrupts it:
+   - `…climate-ch` + `ange/…` → `…climate-ch-ange/…` (should be `climate-change`).
+2. **Ignores fragments that start with a capital letter or contain no `-`/`/`**, so some wraps aren't rejoined at all:
+   - `…HealthCaresClimate` + `Footprint_092319.pdf` stays split with a space → invalid link.
 
-This stays minimal, reads clearly at 16px (favicon) and 24-32px (header), and matches the existing restrained navy/neutral palette.
+A related helper, `endsComplete`, has the same blind spot (it only collapses lowercase continuation fragments), which weakens new-entry detection for these cases.
 
-## What gets built
+## The fix
 
-1. **Generate the icon asset**
-   - Create a crisp PNG/SVG-style mark (transparent background) saved to `src/assets/`.
-   - Also produce a favicon-friendly version (square, works small).
+Word processors (Word, Google Docs) wrap long URLs **without** inserting a hyphen. So the correct repair is to **concatenate the fragments with no separator**, and to recognize capitalized-but-URL-like fragments as continuations.
 
-2. **Header logo** (`src/routes/index.tsx`, lines ~511-518)
-   - Replace the `<ShieldCheck className="h-6 w-6" />` with the new icon image, keeping the "Free reference checker" label and "Alpha" badge alongside it.
-   - Remove the now-unused `ShieldCheck` import if it isn't used elsewhere.
+### 1. `mergeWrappedUrl`
+- Join URL fragments with an **empty string** instead of inserting `-`.
+- Broaden the accepted continuation fragment to also match a capitalized/mixed token that is clearly URL-ish — i.e. it contains a digit, `_`, `.`, `-`, or `/` (e.g. `Footprint_092319.pdf`).
+- Keep refusing to merge a plain capitalized word with no URL-ish characters (e.g. `Climate`), so the start of the *next* reference is never swallowed.
 
-3. **Favicon** (`src/routes/__root.tsx`)
-   - Add `<link rel="icon">` tags in the root route `head()` pointing to the favicon asset so it shows in browser tabs and bookmarks.
+### 2. `endsComplete`
+- Update its URL-collapse step to mirror the same broadened fragment rule, so a reference whose URL wraps into a capitalized fragment is still seen as "ending in a URL" and the following line is detected as a new entry.
+
+## Verification
+
+Re-run the parser against the user's pasted list and confirm:
+- `…/5961/HealthCaresClimateFootprint_092319.pdf` (no space, valid).
+- `…/plans/climate-change/global-green-and-healthy-hospitals` (no stray hyphen).
+- Other references (Tomson, Sorensen, Watts, etc.) remain unchanged and correctly separated.
 
 ## Technical notes
 
-- Icon generated via the image tool with a transparent background, then referenced as a normal asset import.
-- Favicon wired through the root route head (the supported place for `<link>` tags in this TanStack stack), not via a `public/` folder.
-- Purely presentational change — no logic, data, or backend changes.
-
-## Open choice
-
-I picked a navy rounded-square checkmark as the default direction since you had no specific preference. If you'd rather see a different motif (e.g. magnifying glass, book, quotation mark), tell me and I'll adjust before implementing.
+- Only `src/lib/parse-references.ts` changes; this module is shared by both the authenticity verifier and the formatting checker, so both benefit.
+- No behavior change for URLs that genuinely contain a trailing hyphen at the wrap point, since concatenation preserves any hyphen already present in the fragment text.
