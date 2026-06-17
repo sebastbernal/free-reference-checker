@@ -287,6 +287,7 @@ async function checkAcademic(
 async function processReference(n: number, ref: string): Promise<ReferenceResult> {
   const { kind, doi, url } = extract(ref);
   const citedTitle = extractCitedTitle(ref);
+  const aiTrace = detectAiTrace(ref);
 
   const base: ReferenceResult = {
     n,
@@ -302,6 +303,7 @@ async function processReference(n: number, ref: string): Promise<ReferenceResult
     wayback: "",
     verdict: "inconclusive",
     notes: "",
+    aiTrace,
   };
 
   if (kind === "academic") {
