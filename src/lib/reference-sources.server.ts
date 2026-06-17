@@ -6,6 +6,17 @@ const TIMEOUT = 15000;
 const USER_AGENT =
   "RefChecker/1.0 (academic reference verification tool; mailto:noreply@example.com)";
 
+// A real browser UA — some university / government sites block non-browser
+// clients outright, which previously produced false "dead link" verdicts.
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+const BROWSER_HEADERS = {
+  "User-Agent": BROWSER_USER_AGENT,
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+};
+
 const HEADERS = { "User-Agent": USER_AGENT, Accept: "application/json" };
 
 async function fetchWithTimeout(
