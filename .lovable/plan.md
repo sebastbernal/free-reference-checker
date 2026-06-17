@@ -1,31 +1,24 @@
-# Swap in the rewritten reference-list splitter
-
 ## Goal
-Replace the reference-splitting implementation with the rewritten version you provided, while keeping the exact `parseReferences(raw: string): string[]` signature and every downstream caller unchanged.
 
-## Current state
-- The shared parser lives in `src/lib/parse-references.ts` (hyphenated). It contains the old inline logic (`mergeWrappedUrl`, `splitRunOn`, `looksLikeStart`, etc.).
-- Two files consume it, both importing from `./parse-references`:
-  - `src/lib/format-check.ts` (citation-style checker)
-  - `src/lib/reference-check.functions.ts` (authenticity verifier)
+Swap two implementations in the reference-checking pipeline with the exact code you provided. No refactoring, no signature changes, no other files touched.
 
 ## Changes
 
-### 1. Create `src/lib/parseReferences.ts`
-Write the full 279-line file exactly as provided in the upload — the two-phase (SEGMENT then REPAIR) splitter that handles soft-wrapped URLs, dates split across lines, wrapped author lists, stray page numbers, zero-width characters, and Canvas markdown-link injection. It exports `parseReferences(raw: string): string[]`. No imports, pure and client-safe. Nothing else is added or modified.
+### 1. `src/lib/file-extract.ts` — full replace (FILE 1)
+- Keeps the same two exports: `extractTextFromFile` and `sliceReferencesSection`.
+- PDF branch reconstructs line breaks from each text item's vertical (Y) position via a new `pageItemsToText` helper instead of `join(" ")`, preserving one line per physical line.
+- Expanded multilingual `HEADING_KEYWORDS` (EN/ES/IT/PT/FR/DE) and broader `STOP_KEYWORDS`, plus matching multilingual tokens in the inline-fallback regexes.
+- New `cleanBoilerplate` helper strips running headers/footers, copyright lines, "downloaded from", and standalone page numbers; applied to all branches (txt/docx/pdf/fallback).
+- Long-PDF optimization: only the last 60 pages are read.
 
-### 2. Replace the body of `src/lib/parse-references.ts` with a re-export
-Swap the old inline implementation for a single re-export so the new file becomes the one source of truth:
+### 2. `src/lib/parseReferences.ts` — full replace (FILE 2)
+- Same `parseReferences(raw: string): string[]` signature.
+- Adds a run-on fallback (`splitRunOnBlock`) so reference lists pasted without line breaks still split, gated to long blocks with 2+ date signatures so normal input is unaffected.
 
-```text
-export { parseReferences } from "./parseReferences";
-```
-
-This preserves the `./parse-references` import path that both callers already use, so `format-check.ts` and `reference-check.functions.ts` need no edits. The `parseReferences(raw: string): string[]` signature is identical.
-
-## Explicitly NOT doing
-- No changes to `format-check.ts` or `reference-check.functions.ts`.
-- No signature changes, no reformatting of unrelated files, no extra "improvements".
+### Untouched (per your instruction)
+- `src/lib/parse-references.ts` (the re-export shim) — no change.
+- Every caller of these functions — signatures are unchanged.
 
 ## Verification
-- Confirm the project still builds and that both call sites resolve `parseReferences` through `parse-references.ts` → `parseReferences.ts`.
+- Confirm both files keep their existing exports/signature.
+- Confirm the build compiles (no missing imports; both new files only use `pdfjs-dist`/`mammoth` dynamic imports already present and standard JS).
