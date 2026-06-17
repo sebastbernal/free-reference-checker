@@ -264,6 +264,9 @@ function Index() {
     setFormatResults(out);
     if (!out.length) {
       toast.error("No references found in the text.");
+    } else {
+      toast.success("Formatting checked — see results below.");
+      scrollToResults(formatResultsRef);
     }
   };
 
