@@ -451,14 +451,14 @@ function Index() {
           </CardContent>
         </Card>
 
-        {mutation.isPending && (
+        {activeView === "verify" && mutation.isPending && (
           <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Verifying references across databases and live links…
           </p>
         )}
 
-        {counts && (
+        {activeView === "verify" && counts && (
           <div ref={verifyResultsRef} className="mt-8 scroll-mt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
