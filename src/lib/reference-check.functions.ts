@@ -7,6 +7,7 @@ import {
   crossrefByDoi,
   crossrefByTitle,
   dblpByTitle,
+  detectContentYear,
   httpCheck,
   openAlexByDoi,
   openAlexByTitle,
@@ -45,6 +46,11 @@ const MIN_TITLE_SIM = 70;
 const MISMATCH_SIM = 50;
 const CONCURRENCY = 4;
 const MAX_REFERENCES = 100;
+
+// Live pages this many years old (or older) are flagged for manual review.
+const OUTDATED_AGE_YEARS = 5;
+// Statuses that prove the server exists but refuses automated checks.
+const BLOCKED_CODES = new Set([401, 403, 405, 429, 451]);
 
 
 
@@ -293,25 +299,64 @@ async function processReferenceCore(n: number, ref: string): Promise<ReferenceRe
   }
 
   if (kind === "web") {
-    const status = await httpCheck(url);
-    base.httpStatus = status;
-    const code = Number(status);
+    const http = await httpCheck(url);
+    base.httpStatus = http.status;
+    const code = Number(http.status);
+    const year = detectContentYear(ref, url, http.lastModified);
+    const outdated =
+      year !== null && new Date().getFullYear() - year >= OUTDATED_AGE_YEARS;
+    const agingNote = outdated
+      ? ` The source looks dated (${year}) — confirm it hasn't been superseded by a newer version.`
+      : "";
+
+    // 1. Live page (2xx/3xx).
     if (!Number.isNaN(code) && code < 400) {
-      base.verdict = "real";
-      base.notes = `Live page (HTTP ${code}).`;
+      if (outdated) {
+        base.verdict = "check";
+        base.notes = `Live page (HTTP ${code}), but it may be outdated.${agingNote}`;
+      } else {
+        base.verdict = "real";
+        base.notes = `Live page (HTTP ${code}).`;
+      }
       return base;
     }
+
+    // 2. Server responded but blocked automated verification — the page exists.
+    if (BLOCKED_CODES.has(code)) {
+      base.verdict = "check";
+      base.notes =
+        `Server responded (HTTP ${code}) but blocked automated verification — ` +
+        `the page likely exists, confirm manually.${agingNote}`;
+      return base;
+    }
+
+    // 3. Network / timeout error: couldn't reach it, but that doesn't prove
+    //    the page is fake — many sites block automated requests by IP.
+    if (Number.isNaN(code)) {
+      const wb = await waybackCheck(url);
+      base.wayback = wb;
+      base.verdict = "check";
+      const archive = wb.startsWith("snapshot")
+        ? ` An archived ${wb} exists.`
+        : "";
+      base.notes =
+        `Couldn't reach the page from our server (${http.status}) — ` +
+        `sites sometimes block automated requests. Verify manually.${archive}${agingNote}`;
+      return base;
+    }
+
+    // 4. Genuine dead page (404/410/other ≥400): fall back to the archive.
     const wb = await waybackCheck(url);
     base.wayback = wb;
     if (wb.startsWith("snapshot")) {
       base.verdict = "archived";
-      base.notes = `Dead link (HTTP ${status}), but an archived ${wb} exists.`;
+      base.notes = `Dead link (HTTP ${http.status}), but an archived ${wb} exists.${agingNote}`;
     } else if (wb === "NO snapshot ever") {
       base.verdict = "no-trace";
-      base.notes = `Unreachable (HTTP ${status}) and never archived. Possibly fabricated.`;
+      base.notes = `Unreachable (HTTP ${http.status}) and never archived. Possibly fabricated.`;
     } else {
       base.verdict = "inconclusive";
-      base.notes = `Could not verify (HTTP ${status}, archive ${wb}).`;
+      base.notes = `Could not verify (HTTP ${http.status}, archive ${wb}).`;
     }
     return base;
   }
