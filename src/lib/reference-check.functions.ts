@@ -7,6 +7,7 @@ import {
   crossrefByDoi,
   crossrefByTitle,
   dblpByTitle,
+  detectContentYear,
   httpCheck,
   openAlexByDoi,
   openAlexByTitle,
