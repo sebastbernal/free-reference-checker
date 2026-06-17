@@ -145,6 +145,9 @@ function Index() {
   const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
     null,
   );
+  const [activeView, setActiveView] = useState<"verify" | "format" | null>(
+    null,
+  );
   const [restored, setRestored] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -164,6 +167,7 @@ function Index() {
           filter?: Filter;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
+          activeView?: "verify" | "format" | null;
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
@@ -171,6 +175,7 @@ function Index() {
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
+        if (saved.activeView) setActiveView(saved.activeView);
       }
     } catch {
       // ignore corrupt storage
@@ -190,6 +195,7 @@ function Index() {
           filter,
           formatStyle,
           formatResults,
+          activeView,
         }),
       );
     } catch {
@@ -202,6 +208,7 @@ function Index() {
     filter,
     formatStyle,
     formatResults,
+    activeView,
   ]);
 
   const scrollToResults = (ref: RefObject<HTMLDivElement | null>) => {
@@ -233,6 +240,7 @@ function Index() {
       toast.error("Paste or upload some references first.");
       return;
     }
+    setActiveView("verify");
     setResults(null);
     setFilter("all");
     mutation.mutate(text);
@@ -260,6 +268,7 @@ function Index() {
       toast.error("Paste or upload some references first.");
       return;
     }
+    setActiveView("format");
     const out = checkFormatting(text, formatStyle);
     setFormatResults(out);
     if (!out.length) {
@@ -419,6 +428,7 @@ function Index() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <Button
                 className="flex-1"
+                variant={activeView === "verify" ? "default" : "outline"}
                 onClick={handleCheck}
                 disabled={mutation.isPending}
               >
@@ -431,7 +441,7 @@ function Index() {
               </Button>
               <Button
                 className="flex-1"
-                variant="secondary"
+                variant={activeView === "format" ? "default" : "outline"}
                 onClick={handleCheckFormat}
               >
                 <ListChecks className="h-4 w-4" />
@@ -441,14 +451,14 @@ function Index() {
           </CardContent>
         </Card>
 
-        {mutation.isPending && (
+        {activeView === "verify" && mutation.isPending && (
           <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Verifying references across databases and live links…
           </p>
         )}
 
-        {counts && (
+        {activeView === "verify" && counts && (
           <div ref={verifyResultsRef} className="mt-8 scroll-mt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -530,7 +540,7 @@ function Index() {
           </div>
         )}
 
-        {formatCounts && (
+        {activeView === "format" && formatCounts && (
           <div ref={formatResultsRef} className="mt-8 scroll-mt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
