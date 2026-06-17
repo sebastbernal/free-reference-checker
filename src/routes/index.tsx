@@ -766,18 +766,60 @@ function Index() {
               </Button>
             </div>
 
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Element type:
+              </span>
+              {(
+                [
+                  { value: "all" as ElementFilter, label: "All types" },
+                  ...(Object.keys(ELEMENT_TYPE_LABELS) as ElementType[]).map(
+                    (k) => ({
+                      value: k as ElementFilter,
+                      label: ELEMENT_TYPE_LABELS[k],
+                    }),
+                  ),
+                ]
+              ).map((t) => {
+                const count =
+                  t.value === "all"
+                    ? formatCounts.total
+                    : elementCounts[t.value] ?? 0;
+                if (t.value !== "all" && count === 0) return null;
+                const active = elementFilter === t.value;
+                return (
+                  <Button
+                    key={t.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setElementFilter(t.value)}
+                  >
+                    {t.label}
+                    <span
+                      className={cn("ml-1", active ? "opacity-80" : "opacity-70")}
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="mt-4 space-y-3">
-              {formatResults
-                ?.slice()
-                .sort((a, b) => GRADE_ORDER[a.grade] - GRADE_ORDER[b.grade])
-                .map((r) => (
-                  <FormatResultCard key={r.n} result={r} />
-                ))}
+              {filteredFormatResults.map((r) => (
+                <FormatResultCard key={r.n} result={r} />
+              ))}
               {formatResults?.length === 0 && (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   No references found in the text.
                 </p>
               )}
+              {(formatResults?.length ?? 0) > 0 &&
+                filteredFormatResults.length === 0 && (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    No references match this filter.
+                  </p>
+                )}
             </div>
           </div>
         )}
