@@ -200,6 +200,8 @@ function Index() {
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
   const [verifiedText, setVerifiedText] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [elementFilter, setElementFilter] = useState<ElementFilter>("all");
   const [formatStyle, setFormatStyle] = useState<CitationStyle>("apa7");
   const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
     null,
