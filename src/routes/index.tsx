@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
@@ -54,6 +55,42 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "offline", label: "Offline" },
   { value: "inconclusive", label: "Inconclusive" },
 ];
+
+// Color each filter chip to match its verdict color in the result cards.
+const FILTER_COLORS: Record<Filter, { active: string; inactive: string }> = {
+  all: {
+    active: "bg-foreground text-background hover:bg-foreground/90",
+    inactive: "",
+  },
+  real: {
+    active: "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500",
+    inactive:
+      "border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950",
+  },
+  check: {
+    active: "bg-amber-500 text-white hover:bg-amber-600 border-amber-500",
+    inactive:
+      "border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950",
+  },
+  "no-trace": {
+    active: "bg-red-500 text-white hover:bg-red-600 border-red-500",
+    inactive:
+      "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950",
+  },
+  archived: {
+    active: "bg-sky-500 text-white hover:bg-sky-600 border-sky-500",
+    inactive:
+      "border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950",
+  },
+  offline: {
+    active: "bg-muted-foreground text-background hover:bg-muted-foreground/90",
+    inactive: "text-muted-foreground",
+  },
+  inconclusive: {
+    active: "bg-muted-foreground text-background hover:bg-muted-foreground/90",
+    inactive: "text-muted-foreground",
+  },
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -591,21 +628,17 @@ function Index() {
                     : verdictCounts[f.value] ?? 0;
                 if (f.value !== "all" && count === 0) return null;
                 const active = filter === f.value;
+                const color = FILTER_COLORS[f.value];
                 return (
                   <Button
                     key={f.value}
                     variant={active ? "default" : "outline"}
                     size="sm"
+                    className={cn(active ? color.active : color.inactive)}
                     onClick={() => setFilter(f.value)}
                   >
                     {f.label}
-                    <span
-                      className={
-                        active
-                          ? "ml-1 text-primary-foreground/80"
-                          : "ml-1 text-muted-foreground"
-                      }
-                    >
+                    <span className={cn("ml-1", active ? "opacity-80" : "opacity-70")}>
                       {count}
                     </span>
                   </Button>

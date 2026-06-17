@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { ReferenceResult, Verdict } from "@/lib/reference-check.functions";
 
-const VERDICT_META: Record<
+export const VERDICT_META: Record<
   Verdict,
   { label: string; icon: typeof CheckCircle2; classes: string; bar: string }
 > = {
