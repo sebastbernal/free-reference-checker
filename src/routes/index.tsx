@@ -244,17 +244,32 @@ function Index() {
     mutation.mutate(text);
   };
 
-  const handleFile = async (file: File) => {
+  const handleFile = async (
+    file: File,
+    setter: (value: string) => void,
+  ) => {
     try {
       const extracted = await extractTextFromFile(file);
       if (!extracted.trim()) {
         toast.error("Couldn't extract any text from that file.");
         return;
       }
-      setText(extracted);
+      setter(extracted);
       toast.success(`Loaded ${file.name}`);
     } catch (e) {
       toast.error(`Failed to read file: ${(e as Error).message}`);
+    }
+  };
+
+  const handleCheckFormat = () => {
+    if (!formatText.trim()) {
+      toast.error("Paste or upload some references first.");
+      return;
+    }
+    const out = checkFormatting(formatText, formatStyle);
+    setFormatResults(out);
+    if (!out.length) {
+      toast.error("No references found in the text.");
     }
   };
 
@@ -279,6 +294,20 @@ function Index() {
       // ignore
     }
   };
+
+  const clearFormat = () => {
+    setFormatResults(null);
+    setFormatText("");
+  };
+
+  const formatCounts = formatResults
+    ? {
+        total: formatResults.length,
+        green: formatResults.filter((r) => r.grade === "green").length,
+        yellow: formatResults.filter((r) => r.grade === "yellow").length,
+        red: formatResults.filter((r) => r.grade === "red").length,
+      }
+    : null;
 
   const counts = results
     ? {
