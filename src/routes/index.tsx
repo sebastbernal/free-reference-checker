@@ -408,13 +408,14 @@ function Index() {
             </span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Detect likely-fabricated references
+            Check reference authenticity and citation format
           </h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Paste a reference list or upload a file. Academic citations are
-            verified against CrossRef, Semantic Scholar, OpenAlex, arXiv and
-            DBLP; web links are checked for liveness and against the Internet
-            Archive.
+            Paste a reference list or upload a file. Citations are verified for
+            authenticity against CrossRef, Semantic Scholar, OpenAlex, arXiv and
+            DBLP, and web links are checked for liveness and against the Internet
+            Archive — then validate their formatting against APA, MLA, Harvard
+            and Chicago styles.
           </p>
         </div>
       </header>
