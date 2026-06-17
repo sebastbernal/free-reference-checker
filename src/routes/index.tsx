@@ -436,6 +436,12 @@ function Index() {
     setFilter("all");
     setTypeFilter("all");
     setText("");
+    // Also clear any citation-formatting results so the page fully resets.
+    setFormatResults(null);
+    setFormattedText("");
+    setElementFilter("all");
+    setFormatStep("idle");
+    setActiveView(null);
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {
