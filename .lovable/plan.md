@@ -1,13 +1,7 @@
-## Add feedback email section below the verify disclaimer
+Add a small "Alpha" badge to make it clear the tool is in early release.
 
-Add a small, friendly feedback section immediately below the amber disclaimer box that appears when `activeView === "verify" && (mutation.isPending || results)`.
+**Placement:** Next to the "Free reference checker" brand label in the header (`src/routes/index.tsx`, lines 511–516). This is the most visible spot without cluttering the UI.
 
-### UI details
-- Same rounded-lg card style with a subtle border, but using a softer blue/grey tone (not amber) to distinguish it from the warning above.
-- Text: "Not what you expected? Disappointed? Send me an email to sebast.bernal.garcia@gmail.com" with the email address as a clickable `mailto:` link.
-- Small margin-top (`mt-3`) to sit snugly below the disclaimer.
+**Design:** A compact rounded pill/badge with a slightly muted style (e.g. `bg-muted text-muted-foreground text-xs font-medium px-2 py-0.5 rounded-full`) sitting immediately to the right of the "Free reference checker" text.
 
-### Technical details
-- Edit `src/routes/index.tsx`.
-- Insert the new block right after the closing `</div>` of the disclaimer at line ~650.
-- Import `Mail` icon from `lucide-react` if a small icon is desired, or keep it text-only for simplicity.
+**No functional changes** — purely a visual label.
