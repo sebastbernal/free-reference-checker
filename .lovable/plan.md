@@ -1,57 +1,18 @@
-Plan: Citation style selector appears only after clicking Check formatting
+The "How it works — what happens behind the scenes" collapsible section currently only explains the Verify authenticity flow. We will make it context-aware so its content changes depending on which button is active.
 
-Current state
-- Citation style selector (APA 7th / MLA 9th / Harvard / Chicago 17th) is always visible above the two action buttons.
-- Clicking Check formatting immediately runs the formatting check using the pre-selected style.
+### Changes
+1. In `src/routes/index.tsx`, wrap the inner content of the `showHow` block (lines 646-749) in a conditional:
+   - If `activeView === "format"`, show formatting-specific explanation.
+   - Otherwise, show the existing verify-authenticity explanation.
 
-Desired behavior
-- The citation style selector is completely hidden by default.
-- When the user clicks Check formatting, the button becomes active/highlighted and the citation style selector appears directly below the buttons.
-- The formatting check does NOT run when the button is clicked.
-- Only after the user selects a citation style from the newly-shown selector does the formatting check execute and results appear.
-- Clicking Verify authenticity hides the style selector and switches to the verify view as before.
+### New formatting content
+- **Opening paragraph**: Explain that the formatting checker compares references against the selected citation style using heuristic, rule-based logic — explicitly noting it does **not** use any AI or large language model, so results may not be very accurate.
+- **Step 1 — Parsing**: Split text into individual references; look for authors, years, titles, journals, volume/issue, pages, URLs.
+- **Step 2 — Rule checking**: Score each reference against the chosen style (APA 7th, MLA 9th, Harvard, Chicago 17th). List typical checks: author formatting, year placement, title casing, journal/publisher info, punctuation.
+- **Step 3 — Grading**: Explain the green/yellow/red grades.
+- **Disclaimer**: Mention that because it is rule-based and cannot see italics/indentation in plain pasted text, results are approximate and should be compared against the official style manual.
 
-Implementation steps
+### Existing verify content
+- Keep unchanged but update the opening sentence to say "when you press Verify authenticity" instead of "Check references".
 
-1. Remove the always-visible citation style block (lines ~412-426 in src/routes/index.tsx).
-
-2. Add state to track the formatting flow:
-   - `formatStep: "idle" | "selecting" | "done"` (or equivalent boolean `showStyleSelector`)
-   - Default: "idle"
-
-3. Update handleCheckFormat:
-   - Instead of running checkFormatting immediately:
-     a. Set activeView to "format"
-     b. Clear any previous formatResults so the user can re-select
-     c. Set formatStep to "selecting" to reveal the style selector
-   - Do NOT call checkFormatting or set formatResults yet.
-
-4. Update citation style onClick:
-   - When a style button is clicked:
-     a. Set formatStyle to the selected value
-     b. Run checkFormatting(text, selectedStyle)
-     c. Set formatResults
-     d. Set formatStep to "done"
-     e. Scroll to format results
-
-5. Render the style selector conditionally:
-   - Show below the action buttons only when activeView === "format" && formatStep === "selecting"
-   - Use a small label like "Select citation style" above the buttons
-
-6. Update Verify authenticity handler:
-   - Set formatStep back to "idle" so the style selector disappears.
-
-7. Session persistence:
-   - Include formatStep in the sessionStorage save/restore logic alongside activeView and formatResults.
-
-8. Edge cases:
-   - If sessionStorage restores activeView="format" with existing formatResults, show results directly (formatStep="done").
-   - If activeView="format" with no formatResults, show the selector (formatStep="selecting").
-
-Visual result after paste + click Check formatting:
-- Text area remains.
-- Verify authenticity button is outline.
-- Check formatting button is filled/default.
-- Below the buttons: a compact row with label "Select citation style" and the 4 style buttons (APA 7th, MLA 9th, Harvard, Chicago 17th).
-- User clicks APA 7th → formatting check runs → results appear below.
-- User clicks Verify authenticity → style selector disappears, authenticity results appear.
+No other files need to change.

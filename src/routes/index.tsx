@@ -643,110 +643,241 @@ function Index() {
               id="how-it-works"
               className="space-y-4 pb-4 text-sm text-muted-foreground"
             >
-              <p>
-                This tool tries to detect references that may have been
-                fabricated or that point to dead links. Nothing is stored on a
-                server — each reference is checked live against public databases
-                when you press <span className="font-medium">Check references</span>.
-              </p>
+              {activeView === "format" ? (
+                <>
+                  <p>
+                    The formatting checker compares each reference against the
+                    rules of the citation style you select. It is a heuristic,
+                    rule-based check — it does{" "}
+                    <span className="font-medium">not use any AI</span> or large
+                    language model, so it can miss nuances and may not be very
+                    accurate. Treat the results as a helpful guide rather than a
+                    definitive verdict.
+                  </p>
 
-              <div>
-                <h3 className="font-medium text-foreground">1. Parsing</h3>
-                <p>
-                  Your pasted text — or the text extracted from an uploaded{" "}
-                  <code>.txt</code>, <code>.docx</code> or <code>.pdf</code> — is
-                  split into individual references. For uploaded documents, only
-                  the <span className="font-medium">References / Bibliography</span>{" "}
-                  section at the end of the document is used.
-                </p>
-              </div>
+                  <div>
+                    <h3 className="font-medium text-foreground">1. Parsing</h3>
+                    <p>
+                      Your pasted text is split into individual references. The
+                      parser looks for author names, years, titles, journal
+                      names, volume / issue numbers, page ranges and URLs.
+                    </p>
+                  </div>
 
-              <div>
-                <h3 className="font-medium text-foreground">2. Classification</h3>
-                <p>
-                  Each entry is sorted into one of three types based on what it
-                  contains:
-                </p>
-                <ul className="ml-4 mt-1 list-disc space-y-1">
-                  <li>
-                    <span className="font-medium text-foreground">Academic</span>{" "}
-                    — has a DOI or links to a scholarly source (e.g. arXiv).
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Web</span> — a
-                    regular website link with no DOI.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Offline</span>{" "}
-                    — e.g. a printed book, with no link to verify.
-                  </li>
-                </ul>
-              </div>
+                  <div>
+                    <h3 className="font-medium text-foreground">
+                      2. Rule checking
+                    </h3>
+                    <p>
+                      Each reference is scored against the style you chose (e.g.
+                      APA 7th, MLA 9th, Harvard, Chicago 17th). Typical checks
+                      include:
+                    </p>
+                    <ul className="ml-4 mt-1 list-disc space-y-1">
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Author formatting
+                        </span>{" "}
+                        — order, initials and punctuation between names.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Year placement
+                        </span>{" "}
+                        — inside parentheses or inline, depending on the style.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Title casing
+                        </span>{" "}
+                        — sentence case vs. title case (italics rules are noted
+                        but not visible in pasted plain text).
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Source details
+                        </span>{" "}
+                        — journal / publisher, volume, issue, page range and DOI
+                        formatting.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Punctuation
+                        </span>{" "}
+                        — periods, commas, colons and ampersands in the right
+                        positions.
+                      </li>
+                    </ul>
+                  </div>
 
-              <div>
-                <h3 className="font-medium text-foreground">3. Verification</h3>
-                <ul className="ml-4 mt-1 list-disc space-y-1">
-                  <li>
-                    <span className="font-medium text-foreground">Academic:</span>{" "}
-                    the DOI is resolved first (CrossRef, then OpenAlex). If there
-                    is no DOI, the title is searched across{" "}
-                    <span className="font-medium">
-                      CrossRef, OpenAlex, Semantic Scholar, arXiv and DBLP
-                    </span>
-                    . A title-similarity score then decides whether it is a
-                    confident match.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Web:</span> the
-                    link is fetched to confirm it is live (HTTP status). Dead
-                    links are looked up in the{" "}
-                    <span className="font-medium">Internet Archive (Wayback)</span>{" "}
-                    to see if a snapshot ever existed.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Offline:</span>{" "}
-                    flagged as not automatically verifiable.
-                  </li>
-                </ul>
-              </div>
+                  <div>
+                    <h3 className="font-medium text-foreground">3. Grading</h3>
+                    <ul className="ml-4 mt-1 list-disc space-y-1">
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Perfect (green)
+                        </span>{" "}
+                        — the reference follows most of the style rules.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Needs work (yellow)
+                        </span>{" "}
+                        — elements are present but out of order or missing minor
+                        punctuation.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Bad (red)
+                        </span>{" "}
+                        — major components are missing or the structure doesn't
+                        match the selected style.
+                      </li>
+                    </ul>
+                  </div>
 
-              <div>
-                <h3 className="font-medium text-foreground">Verdict legend</h3>
-                <ul className="ml-4 mt-1 list-disc space-y-1">
-                  <li>
-                    <span className="font-medium text-foreground">Real</span> —
-                    confidently matched in a database or a live link.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Check</span> —
-                    found but the title only partly matches; verify manually.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">No trace</span>{" "}
-                    — unreachable and never archived; possibly fabricated.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Archived</span>{" "}
-                    — the live link is dead, but an Internet Archive snapshot
-                    exists.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">Offline</span> —
-                    a source (e.g. a book) that cannot be auto-verified.
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">
-                      Inconclusive
-                    </span>{" "}
-                    — the checks could not reach a clear answer.
-                  </li>
-                </ul>
-              </div>
+                  <p className="text-xs">
+                    Because this check is rule-based and can't see formatting
+                    such as italics or hanging indents in pasted plain text, the
+                    results are approximate — always compare against the official
+                    style manual.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    This tool tries to detect references that may have been
+                    fabricated or that point to dead links. Nothing is stored on
+                    a server — each reference is checked live against public
+                    databases when you press{" "}
+                    <span className="font-medium">Verify authenticity</span>.
+                  </p>
 
-              <p className="text-xs">
-                Results are heuristic and can occasionally be wrong — always
-                double-check anything flagged before acting on it.
-              </p>
+                  <div>
+                    <h3 className="font-medium text-foreground">1. Parsing</h3>
+                    <p>
+                      Your pasted text — or the text extracted from an uploaded{" "}
+                      <code>.txt</code>, <code>.docx</code> or <code>.pdf</code> —
+                      is split into individual references. For uploaded documents,
+                      only the{" "}
+                      <span className="font-medium">
+                        References / Bibliography
+                      </span>{" "}
+                      section at the end of the document is used.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium text-foreground">
+                      2. Classification
+                    </h3>
+                    <p>
+                      Each entry is sorted into one of three types based on what
+                      it contains:
+                    </p>
+                    <ul className="ml-4 mt-1 list-disc space-y-1">
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Academic
+                        </span>{" "}
+                        — has a DOI or links to a scholarly source (e.g. arXiv).
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">Web</span> —
+                        a regular website link with no DOI.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Offline
+                        </span>{" "}
+                        — e.g. a printed book, with no link to verify.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium text-foreground">
+                      3. Verification
+                    </h3>
+                    <ul className="ml-4 mt-1 list-disc space-y-1">
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Academic:
+                        </span>{" "}
+                        the DOI is resolved first (CrossRef, then OpenAlex). If
+                        there is no DOI, the title is searched across{" "}
+                        <span className="font-medium">
+                          CrossRef, OpenAlex, Semantic Scholar, arXiv and DBLP
+                        </span>
+                        . A title-similarity score then decides whether it is a
+                        confident match.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">Web:</span>{" "}
+                        the link is fetched to confirm it is live (HTTP status).
+                        Dead links are looked up in the{" "}
+                        <span className="font-medium">
+                          Internet Archive (Wayback)
+                        </span>{" "}
+                        to see if a snapshot ever existed.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Offline:
+                        </span>{" "}
+                        flagged as not automatically verifiable.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium text-foreground">
+                      Verdict legend
+                    </h3>
+                    <ul className="ml-4 mt-1 list-disc space-y-1">
+                      <li>
+                        <span className="font-medium text-foreground">Real</span>{" "}
+                        — confidently matched in a database or a live link.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">Check</span>{" "}
+                        — found but the title only partly matches; verify
+                        manually.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          No trace
+                        </span>{" "}
+                        — unreachable and never archived; possibly fabricated.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Archived
+                        </span>{" "}
+                        — the live link is dead, but an Internet Archive snapshot
+                        exists.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Offline
+                        </span>{" "}
+                        — a source (e.g. a book) that cannot be auto-verified.
+                      </li>
+                      <li>
+                        <span className="font-medium text-foreground">
+                          Inconclusive
+                        </span>{" "}
+                        — the checks could not reach a clear answer.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p className="text-xs">
+                    Results are heuristic and can occasionally be wrong — always
+                    double-check anything flagged before acting on it.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
