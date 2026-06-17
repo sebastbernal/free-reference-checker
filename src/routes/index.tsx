@@ -671,10 +671,6 @@ function Index() {
                   <FileText className="h-4 w-4" />
                   Export CSV
                 </Button>
-                <Button variant="ghost" size="sm" onClick={clearAll}>
-                  <Trash2 className="h-4 w-4" />
-                  Clear
-                </Button>
               </div>
             </div>
 
