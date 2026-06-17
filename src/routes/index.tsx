@@ -209,6 +209,7 @@ function Index() {
           formatStyle,
           formatResults,
           activeView,
+          formatStep,
         }),
       );
     } catch {
@@ -222,6 +223,7 @@ function Index() {
     formatStyle,
     formatResults,
     activeView,
+    formatStep,
   ]);
 
   const scrollToResults = (ref: RefObject<HTMLDivElement | null>) => {
