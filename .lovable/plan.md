@@ -1,37 +1,29 @@
-## Problem
+# Fix flickering 403/404 verdicts via a more reliable archive lookup
 
-`waybackCheck` reports "no snapshot" for the CSIRO URL even though the Internet Archive has many captures (2021–2025).
+## What's actually happening
 
-Root cause: it queries `https://archive.org/wayback/available`, which does brittle exact-string matching. For this URL the `https://` form returns `archived_snapshots: {}` while only the `http://` form returns the snapshot — so we falsely report "NO snapshot ever". The CDX API (`web.archive.org/cdx/search/cdx`) finds the captures every time, normalizing scheme/trailing-slash.
+I reproduced both cases against the live Internet Archive API.
 
-Verified locally:
-- `available?url=https://research.csiro.au/...` → `{}` (false negative)
-- CDX → 5+ captures, most recent `20250720` (200)
-- CDX for a fabricated URL → `[]` (correct true negative)
+**Griffith** — the page now returns **HTTP 403**. It "worked before" because its server used to let our automated request through; it has since started blocking bots. On a 403 we fall back to the archive. Griffith *does* have snapshots (confirmed: captures through 2026), so the **correct** verdict is amber "check / confirm manually" — **not** red. A 403 is only a red flag when there is genuinely **no** snapshot.
 
-## Change
+**IPCC** — the page returns **HTTP 404**. It showed **"inconclusive"** because the archive lookup **timed out** and returned `error:` instead of a clean yes/no.
 
-File: `src/lib/reference-sources.server.ts`, `waybackCheck` (lines 363–377).
+**Root cause for both:** the Wayback CDX query latency is wildly variable (measured 2s–30s for the same URL) and regularly exceeds the 15s timeout, returning `error:`. That `error:` then collapses otherwise-clear results into soft, flickering verdicts.
 
-Replace the `available` call with a CDX query that returns the most recent capture:
+## The fix (lookup only — verdict logic unchanged)
 
-```text
-GET https://web.archive.org/cdx/search/cdx
-    ?url=<encoded>&output=json&fl=timestamp,statuscode&filter=statuscode:200&limit=-1
-```
+### Harden the archive lookup (`waybackCheck`, `src/lib/reference-sources.server.ts`)
+- Give it its own dedicated timeout of **30s per attempt**.
+- **Two attempts total** (1 initial + 1 retry) on timeout/network error, for a **1-minute total wait** budget before giving up.
+- Keep the existing CDX query and the three return shapes unchanged: `snapshot exists (YYYY)`, `NO snapshot ever`, `error: <name>`.
 
-- `limit=-1` → returns only the most recent matching capture.
-- Response is a JSON array; row[0] is the header. If a data row exists → `snapshot exists (YYYY)` using the first 4 chars of the timestamp.
-- Empty array / only header → `NO snapshot ever`.
-- Network/parse failure → `error: <name>` (unchanged behaviour, keeps the existing inconclusive path working).
+That's the only change. The verdict mapping in `src/lib/reference-check.functions.ts` stays exactly as it is — including the existing **`inconclusive`** result for a dead page whose archive can't be confirmed.
 
-Keep the same return-string contract (`"snapshot exists (YYYY)"` / `"NO snapshot ever"` / `"error: …"`) so every caller in `reference-check.functions.ts` and the card rendering keep working with no other edits.
+## Outcome
+- The archive lookup returns a real yes/no far more often, so verdicts stop flickering.
+- **Griffith (403, has snapshot):** stable amber "check — server blocked us, an archived snapshot exists, confirm manually".
+- **IPCC (404):** when the slow lookup now succeeds, it resolves to its real verdict (`archived` if a snapshot exists, `no-trace` if none); only a genuine archive failure still falls back to `inconclusive` as before.
 
-## What does NOT change
-
-- `reference-check.functions.ts` branch logic and verdict mapping — untouched; it only reads the returned string.
-- `ReferenceResultCard.tsx` — untouched.
-
-## Verification
-
-After the edit, run the check on the CSIRO URL and confirm the card shows the archived snapshot instead of "no snapshot", and confirm a clearly fabricated URL still reports no snapshot.
+## Technical notes
+- Only one file changes: `src/lib/reference-sources.server.ts` (30s timeout + one retry, 2 attempts / ~60s total, in `waybackCheck`).
+- No changes to `reference-check.functions.ts` or `ReferenceResultCard.tsx`.
