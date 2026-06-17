@@ -1,23 +1,20 @@
-## Goal
-Replace the current tabbed UI ("Verify authenticity" / "Check formatting") with one shared reference-paste area and two action buttons below it.
+## Problem
+Clicking **Check formatting** does run (`handleCheckFormat` computes results and calls `setFormatResults`), but the results render in a section far below the input card — below the authenticity results too. On a short viewport nothing visibly changes, so it feels like "click does nothing."
 
-## What changes
+## Fix
+Make the action visibly respond by auto-scrolling to the freshly rendered results, and give a small in-view confirmation.
 
-1. **Remove `<Tabs>` entirely** — the `Tabs`, `TabsList`, `TabsContent` wrapper goes away.
-2. **Unify to one shared textarea** — combine `text` and `formatText` into a single `text` state. One `<Textarea>` with one set of upload / example controls.
-3. **Two buttons below the textarea** — side-by-side (or stacked on mobile):
-   - **Verify authenticity** (left, primary or outline) — runs the existing server-side check.
-   - **Check formatting** (right) — runs the client-side format check.
-4. **Move the style selector** — the four citation-style buttons (APA 7th, MLA 9th, etc.) move to a compact row between the textarea and the action buttons (or directly above the "Check formatting" button).
-5. **Keep both result sections** — verify results and format results render independently below the card when they exist. Each keeps its own filters, counts, clear button, and result cards.
-6. **Update sessionStorage persistence** — drop the `tab` field; store only the unified `text`, both result sets, and `formatStyle`.
-7. **Remove unused imports** — `Tabs`, `TabsList`, `TabsContent`, `TabsTrigger` and the `tab` state.
+### Changes in `src/routes/index.tsx`
+1. **Add result section refs** — a `formatResultsRef` and a `verifyResultsRef` (`useRef<HTMLDivElement>`), attached to the existing format-results `<div>` and the verify-results `<div>`.
+2. **Scroll on action:**
+   - In `handleCheckFormat`, after `setFormatResults(out)` and when `out.length > 0`, scroll `formatResultsRef` into view (`scrollIntoView({ behavior: "smooth", block: "start" })`), wrapped in a `requestAnimationFrame`/`setTimeout(0)` so it runs after the results render.
+   - In `mutation.onSuccess` (verify), do the same for `verifyResultsRef` after results are set.
+3. **Keep both results visible** — no structural change needed; both sections already render independently.
 
-## Files to edit
-- `src/routes/index.tsx` — main layout refactor.
-
-## No new files or dependencies needed.
+### Optional polish
+- Add a brief `toast.success` (e.g. "Formatting checked — see results below") so there is immediate in-view feedback even before the scroll, mirroring the existing error toasts.
 
 ## Verification
-- Paste example text, click each button, and confirm both verify results and format results render correctly without tabs.
-- Confirm sessionStorage restore still works after a page reload.
+- Paste the example, click **Check formatting**, confirm the page smoothly scrolls to the colored grade cards.
+- Click **Verify authenticity**, confirm it scrolls to the authenticity results.
+- Confirm clicking with an empty box still shows the "Paste or upload…" toast.

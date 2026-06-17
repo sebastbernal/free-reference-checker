@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   ChevronDown,
   FileText,
@@ -149,6 +149,8 @@ function Index() {
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const verifyResultsRef = useRef<HTMLDivElement>(null);
+  const formatResultsRef = useRef<HTMLDivElement>(null);
   const checkFn = useServerFn(checkReferences);
 
   // Restore previous session state after mount (avoids SSR mismatch).
@@ -202,6 +204,12 @@ function Index() {
     formatResults,
   ]);
 
+  const scrollToResults = (ref: RefObject<HTMLDivElement | null>) => {
+    requestAnimationFrame(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   const mutation = useMutation({
     mutationFn: (input: string) => checkFn({ data: { text: input } }),
     onSuccess: (data) => {
@@ -211,6 +219,8 @@ function Index() {
       setResults(sorted);
       if (!data.results.length) {
         toast.error("No references found in the text.");
+      } else {
+        scrollToResults(verifyResultsRef);
       }
     },
     onError: (err) => {
@@ -254,6 +264,9 @@ function Index() {
     setFormatResults(out);
     if (!out.length) {
       toast.error("No references found in the text.");
+    } else {
+      toast.success("Formatting checked — see results below.");
+      scrollToResults(formatResultsRef);
     }
   };
 
@@ -436,7 +449,7 @@ function Index() {
         )}
 
         {counts && (
-          <div className="mt-8">
+          <div ref={verifyResultsRef} className="mt-8 scroll-mt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="flex items-center gap-1.5 font-medium">
@@ -518,7 +531,7 @@ function Index() {
         )}
 
         {formatCounts && (
-          <div className="mt-8">
+          <div ref={formatResultsRef} className="mt-8 scroll-mt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="flex items-center gap-1.5 font-medium">
