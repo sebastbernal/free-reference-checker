@@ -146,11 +146,13 @@ function toCsv(rows: ReferenceResult[]): string {
 function Index() {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
+  const [verifiedText, setVerifiedText] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [formatStyle, setFormatStyle] = useState<CitationStyle>("apa7");
   const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
     null,
   );
+  const [formattedText, setFormattedText] = useState("");
   const [activeView, setActiveView] = useState<"verify" | "format" | null>(
     null,
   );
