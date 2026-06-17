@@ -550,7 +550,7 @@ function Index() {
           <CardContent className="p-4">
             <div className="mb-2 flex items-center justify-between">
               <label htmlFor="refs" className="text-sm font-medium">
-                Paste reference(s)
+                Paste references or drop/upload a file
               </label>
               <div className="flex gap-2">
                 <Button
