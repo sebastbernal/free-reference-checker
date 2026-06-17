@@ -456,10 +456,33 @@ function Index() {
       }, {})
     : {};
 
+  const typeCounts = results
+    ? results.reduce<Record<string, number>>((acc, r) => {
+        acc[r.type] = (acc[r.type] ?? 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
   const filteredResults = results
-    ? filter === "all"
-      ? results
-      : results.filter((r) => r.verdict === filter)
+    ? results.filter(
+        (r) =>
+          (filter === "all" || r.verdict === filter) &&
+          (typeFilter === "all" || r.type === typeFilter),
+      )
+    : [];
+
+  const elementCounts = formatResults
+    ? formatResults.reduce<Record<string, number>>((acc, r) => {
+        acc[r.elementType] = (acc[r.elementType] ?? 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  const filteredFormatResults = formatResults
+    ? formatResults
+        .slice()
+        .sort((a, b) => GRADE_ORDER[a.grade] - GRADE_ORDER[b.grade])
+        .filter((r) => elementFilter === "all" || r.elementType === elementFilter)
     : [];
 
   return (
