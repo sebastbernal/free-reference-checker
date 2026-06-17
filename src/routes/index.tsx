@@ -98,6 +98,12 @@ const VERDICT_ORDER: Record<string, number> = {
   offline: 5,
 };
 
+const GRADE_ORDER: Record<string, number> = {
+  red: 0,
+  yellow: 1,
+  green: 2,
+};
+
 function toCsv(rows: ReferenceResult[]): string {
   const headers = [
     "n",
@@ -603,9 +609,12 @@ function Index() {
             </div>
 
             <div className="mt-4 space-y-3">
-              {formatResults?.map((r) => (
-                <FormatResultCard key={r.n} result={r} />
-              ))}
+              {formatResults
+                ?.slice()
+                .sort((a, b) => GRADE_ORDER[a.grade] - GRADE_ORDER[b.grade])
+                .map((r) => (
+                  <FormatResultCard key={r.n} result={r} />
+                ))}
               {formatResults?.length === 0 && (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   No references found in the text.
