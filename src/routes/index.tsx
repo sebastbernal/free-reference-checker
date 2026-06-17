@@ -161,19 +161,15 @@ function Index() {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as {
-          tab?: "verify" | "format";
           text?: string;
           results?: ReferenceResult[] | null;
           filter?: Filter;
-          formatText?: string;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
         };
-        if (saved.tab) setTab(saved.tab);
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
         if (saved.filter) setFilter(saved.filter);
-        if (typeof saved.formatText === "string") setFormatText(saved.formatText);
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
@@ -191,11 +187,9 @@ function Index() {
       sessionStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
-          tab,
           text,
           results,
           filter,
-          formatText,
           formatStyle,
           formatResults,
         }),
@@ -205,11 +199,9 @@ function Index() {
     }
   }, [
     restored,
-    tab,
     text,
     results,
     filter,
-    formatText,
     formatStyle,
     formatResults,
   ]);
