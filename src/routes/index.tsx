@@ -94,6 +94,19 @@ const FILTER_COLORS: Record<Filter, { active: string; inactive: string }> = {
   },
 };
 
+// Source-type filter for the authenticity view.
+type TypeFilter = ReferenceResult["type"] | "all";
+
+const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
+  { value: "all", label: "All types" },
+  { value: "academic", label: "Academic" },
+  { value: "web", label: "Web" },
+  { value: "offline", label: "Offline" },
+];
+
+// Element-type filter for the formatting view (built from detected types).
+type ElementFilter = ElementType | "all";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
