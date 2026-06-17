@@ -276,6 +276,12 @@ function Index() {
     }
     setActiveView("verify");
     setFormatStep("idle");
+    // If we already have results for this exact text, just switch back to the
+    // view and show them — don't clear or re-run.
+    if (results && text === verifiedText) {
+      scrollToResults(verifyResultsRef);
+      return;
+    }
     setResults(null);
     setFilter("all");
     mutation.mutate(text);
