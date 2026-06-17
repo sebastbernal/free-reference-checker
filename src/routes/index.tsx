@@ -240,6 +240,7 @@ function Index() {
       toast.error("Paste or upload some references first.");
       return;
     }
+    setActiveView("verify");
     setResults(null);
     setFilter("all");
     mutation.mutate(text);
