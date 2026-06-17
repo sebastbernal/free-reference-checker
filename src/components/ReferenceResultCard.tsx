@@ -115,6 +115,16 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
                 <dd className="inline">{result.matchedTitle}</dd>
               </div>
             )}
+            {result.aiTrace && (
+              <div className="sm:col-span-2">
+                <dt className="inline font-medium text-red-700 dark:text-red-400">
+                  AI trace:{" "}
+                </dt>
+                <dd className="inline break-all text-red-700 dark:text-red-400">
+                  {result.aiTrace}
+                </dd>
+              </div>
+            )}
             {result.doi && (
               <div>
                 <dt className="inline font-medium">DOI: </dt>
