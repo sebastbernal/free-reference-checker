@@ -583,19 +583,25 @@ function Index() {
 
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Button
-                className="flex-1"
-                variant={activeView === "verify" ? "default" : "outline"}
-                onClick={handleCheck}
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
+              {mutation.isPending ? (
+                <Button
+                  className="flex-1"
+                  variant="destructive"
+                  onClick={handleStop}
+                >
+                  <X className="h-4 w-4" />
+                  Stop verification
+                </Button>
+              ) : (
+                <Button
+                  className="flex-1"
+                  variant={activeView === "verify" ? "default" : "outline"}
+                  onClick={handleCheck}
+                >
                   <ShieldCheck className="h-4 w-4" />
-                )}
-                {mutation.isPending ? "Checking…" : "Verify authenticity"}
-              </Button>
+                  Verify authenticity
+                </Button>
+              )}
               <Button
                 className="flex-1"
                 variant={activeView === "format" ? "default" : "outline"}
