@@ -98,6 +98,12 @@ const VERDICT_ORDER: Record<string, number> = {
   offline: 5,
 };
 
+const GRADE_ORDER: Record<string, number> = {
+  red: 0,
+  yellow: 1,
+  green: 2,
+};
+
 function toCsv(rows: ReferenceResult[]): string {
   const headers = [
     "n",
