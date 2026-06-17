@@ -80,7 +80,11 @@ function mergeWrappedUrl(entry: string): string {
   let out = entry;
   do {
     prev = out;
-    out = out.replace(re, (_m, url: string, frag: string) => `${url}-${frag}`);
+    // If the URL fragment already ends with "-" (the word processor kept the
+    // hyphen at the wrap point) don't add a second one — otherwise insert "-".
+    out = out.replace(re, (_m, url: string, frag: string) =>
+      `${url}${url.endsWith("-") ? "" : "-"}${frag}`,
+    );
   } while (out !== prev);
   return out;
 }
