@@ -146,11 +146,13 @@ function toCsv(rows: ReferenceResult[]): string {
 function Index() {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ReferenceResult[] | null>(null);
+  const [verifiedText, setVerifiedText] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [formatStyle, setFormatStyle] = useState<CitationStyle>("apa7");
   const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
     null,
   );
+  const [formattedText, setFormattedText] = useState("");
   const [activeView, setActiveView] = useState<"verify" | "format" | null>(
     null,
   );
@@ -173,18 +175,24 @@ function Index() {
         const saved = JSON.parse(raw) as {
           text?: string;
           results?: ReferenceResult[] | null;
+          verifiedText?: string;
           filter?: Filter;
           formatStyle?: CitationStyle;
           formatResults?: FormatResult[] | null;
+          formattedText?: string;
           activeView?: "verify" | "format" | null;
           formatStep?: "idle" | "selecting" | "done";
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
+        if (typeof saved.verifiedText === "string")
+          setVerifiedText(saved.verifiedText);
         if (saved.filter) setFilter(saved.filter);
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
         if (Array.isArray(saved.formatResults))
           setFormatResults(saved.formatResults);
+        if (typeof saved.formattedText === "string")
+          setFormattedText(saved.formattedText);
         if (saved.activeView) setActiveView(saved.activeView);
         if (saved.formatStep) {
           setFormatStep(saved.formatStep);
@@ -211,9 +219,11 @@ function Index() {
         JSON.stringify({
           text,
           results,
+          verifiedText,
           filter,
           formatStyle,
           formatResults,
+          formattedText,
           activeView,
           formatStep,
         }),
@@ -225,9 +235,11 @@ function Index() {
     restored,
     text,
     results,
+    verifiedText,
     filter,
     formatStyle,
     formatResults,
+    formattedText,
     activeView,
     formatStep,
   ]);
@@ -240,11 +252,12 @@ function Index() {
 
   const mutation = useMutation({
     mutationFn: (input: string) => checkFn({ data: { text: input } }),
-    onSuccess: (data) => {
+    onSuccess: (data, input) => {
       const sorted = [...data.results].sort(
         (a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict],
       );
       setResults(sorted);
+      setVerifiedText(input);
       if (!data.results.length) {
         toast.error("No references found in the text.");
       } else {
@@ -263,6 +276,12 @@ function Index() {
     }
     setActiveView("verify");
     setFormatStep("idle");
+    // If we already have results for this exact text, just switch back to the
+    // view and show them — don't clear or re-run.
+    if (results && text === verifiedText) {
+      scrollToResults(verifyResultsRef);
+      return;
+    }
     setResults(null);
     setFilter("all");
     mutation.mutate(text);
@@ -291,6 +310,13 @@ function Index() {
       return;
     }
     setActiveView("format");
+    // If we already have formatting results for this exact text, switch back to
+    // the view and keep the chosen style highlighted — don't clear or reset.
+    if (formatResults && text === formattedText) {
+      setFormatStep("done");
+      scrollToResults(formatResultsRef);
+      return;
+    }
     setFormatResults(null);
     setFormatStep("selecting");
   };
@@ -299,6 +325,7 @@ function Index() {
     setFormatStyle(style);
     const out = checkFormatting(text, style);
     setFormatResults(out);
+    setFormattedText(text);
     setFormatStep("done");
     if (!out.length) {
       toast.error("No references found in the text.");
@@ -321,6 +348,7 @@ function Index() {
 
   const clearAll = () => {
     setResults(null);
+    setVerifiedText("");
     setFilter("all");
     setText("");
     try {
@@ -332,6 +360,8 @@ function Index() {
 
   const clearFormat = () => {
     setFormatResults(null);
+    setFormattedText("");
+    setFormatStep("selecting");
   };
 
   const formatCounts = formatResults
