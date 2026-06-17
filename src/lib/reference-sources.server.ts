@@ -362,13 +362,20 @@ export function detectContentYear(
 
 export async function waybackCheck(url: string): Promise<string> {
   try {
+    // The CDX API reliably normalizes scheme/trailing-slash, unlike the
+    // brittle exact-match "available" endpoint. limit=-1 returns only the
+    // most recent matching capture.
     const r = await fetchWithTimeout(
-      `https://archive.org/wayback/available?url=${encodeURIComponent(url)}`,
+      `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}` +
+        `&output=json&fl=timestamp,statuscode&filter=statuscode:200&limit=-1`,
       { headers: HEADERS },
     );
-    const snap = (await r.json())?.archived_snapshots?.closest;
-    if (snap?.available) {
-      return `snapshot exists (${String(snap.timestamp ?? "").slice(0, 4)})`;
+    const rows = (await r.json()) as unknown;
+    if (Array.isArray(rows) && rows.length > 1) {
+      // rows[0] is the header; the last row is the most recent capture.
+      const last = rows[rows.length - 1] as unknown[];
+      const ts = String(last?.[0] ?? "");
+      return `snapshot exists (${ts.slice(0, 4)})`;
     }
     return "NO snapshot ever";
   } catch (e) {

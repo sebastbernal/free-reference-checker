@@ -1,39 +1,37 @@
-## Goal
+## Problem
 
-For a web reference whose server **blocks** automated verification (case 2: HTTP 401/403/405/429/451), run the Wayback/snapshot lookup so the card always shows an archive status — and downgrade the verdict to **red** when no snapshot ever existed (a blocked page that was never archived likely never really existed).
+`waybackCheck` reports "no snapshot" for the CSIRO URL even though the Internet Archive has many captures (2021–2025).
+
+Root cause: it queries `https://archive.org/wayback/available`, which does brittle exact-string matching. For this URL the `https://` form returns `archived_snapshots: {}` while only the `http://` form returns the snapshot — so we falsely report "NO snapshot ever". The CDX API (`web.archive.org/cdx/search/cdx`) finds the captures every time, normalizing scheme/trailing-slash.
+
+Verified locally:
+- `available?url=https://research.csiro.au/...` → `{}` (false negative)
+- CDX → 5+ captures, most recent `20250720` (200)
+- CDX for a fabricated URL → `[]` (correct true negative)
 
 ## Change
 
-File: `src/lib/reference-check.functions.ts`, blocked branch (case 2, lines 325–331).
+File: `src/lib/reference-sources.server.ts`, `waybackCheck` (lines 363–377).
 
-Today this branch returns early with `verdict = "check"` and never sets `base.wayback`, so the card shows no archive line. Replace it so it runs `waybackCheck(url)`, stores the result, and picks the verdict from the snapshot outcome:
+Replace the `available` call with a CDX query that returns the most recent capture:
 
-- **Snapshot exists** (`"snapshot exists (YYYY)"`) → `verdict = "check"` (amber). Note: server blocked verification but an archived snapshot exists + aging note.
-- **No snapshot ever** (`"NO snapshot ever"`) → `verdict = "no-trace"` (**red**). Note: server blocked (HTTP code) and the page was never archived — likely fabricated.
-- **Lookup inconclusive** (`"error: …"`, archive itself unreachable) → `verdict = "check"` (amber). Note: server responded but blocked, archive status couldn't be confirmed — verify manually + aging note.
+```text
+GET https://web.archive.org/cdx/search/cdx
+    ?url=<encoded>&output=json&fl=timestamp,statuscode&filter=statuscode:200&limit=-1
+```
 
-In every sub-case `base.wayback` is set, so the card renders the archive line consistently instead of silently omitting it.
+- `limit=-1` → returns only the most recent matching capture.
+- Response is a JSON array; row[0] is the header. If a data row exists → `snapshot exists (YYYY)` using the first 4 chars of the timestamp.
+- Empty array / only header → `NO snapshot ever`.
+- Network/parse failure → `error: <name>` (unchanged behaviour, keeps the existing inconclusive path working).
+
+Keep the same return-string contract (`"snapshot exists (YYYY)"` / `"NO snapshot ever"` / `"error: …"`) so every caller in `reference-check.functions.ts` and the card rendering keep working with no other edits.
 
 ## What does NOT change
 
-- `ReferenceResultCard.tsx` — already renders `result.wayback` when non-empty, and `no-trace` already maps to red.
-- Cases 1 (live), 3 (network error), 4 (dead page) — untouched.
+- `reference-check.functions.ts` branch logic and verdict mapping — untouched; it only reads the returned string.
+- `ReferenceResultCard.tsx` — untouched.
 
-## Technical detail
+## Verification
 
-```text
-// case 2 (blocked) becomes:
-const wb = await waybackCheck(url);
-base.wayback = wb;
-if (wb.startsWith("snapshot")) {
-  base.verdict = "check";
-  base.notes = `Server responded (HTTP ${code}) but blocked verification — an archived ${wb} exists.${agingNote}`;
-} else if (wb === "NO snapshot ever") {
-  base.verdict = "no-trace";
-  base.notes = `Server blocked verification (HTTP ${code}) and the page was never archived — likely fabricated.`;
-} else {
-  base.verdict = "check";
-  base.notes = `Server responded (HTTP ${code}) but blocked verification; archive status could not be confirmed (${wb}). Verify manually.${agingNote}`;
-}
-return base;
-```
+After the edit, run the check on the CSIRO URL and confirm the card shows the archived snapshot instead of "no snapshot", and confirm a clearly fabricated URL still reports no snapshot.
