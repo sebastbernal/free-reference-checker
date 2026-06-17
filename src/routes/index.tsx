@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -219,6 +220,7 @@ function Index() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyResultsRef = useRef<HTMLDivElement>(null);
   const formatResultsRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const checkFn = useServerFn(checkReferences);
 
   // Restore previous session state after mount (avoids SSR mismatch).
@@ -313,7 +315,11 @@ function Index() {
   };
 
   const mutation = useMutation({
-    mutationFn: (input: string) => checkFn({ data: { text: input } }),
+    mutationFn: (input: string) => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      return checkFn({ data: { text: input }, signal: controller.signal });
+    },
     onSuccess: (data, input) => {
       const sorted = [...data.results].sort(
         (a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict],
@@ -327,9 +333,20 @@ function Index() {
       }
     },
     onError: (err) => {
-      toast.error(`Check failed: ${(err as Error).message}`);
+      const e = err as Error;
+      if (e.name === "AbortError" || abortRef.current?.signal.aborted) {
+        toast("Verification stopped.");
+        return;
+      }
+      toast.error(`Check failed: ${e.message}`);
     },
   });
+
+  const handleStop = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    mutation.reset();
+  };
 
   const handleCheck = () => {
     if (!text.trim()) {
@@ -566,19 +583,25 @@ function Index() {
 
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Button
-                className="flex-1"
-                variant={activeView === "verify" ? "default" : "outline"}
-                onClick={handleCheck}
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
+              {mutation.isPending ? (
+                <Button
+                  className="flex-1"
+                  variant="destructive"
+                  onClick={handleStop}
+                >
+                  <X className="h-4 w-4" />
+                  Stop verification
+                </Button>
+              ) : (
+                <Button
+                  className="flex-1"
+                  variant={activeView === "verify" ? "default" : "outline"}
+                  onClick={handleCheck}
+                >
                   <ShieldCheck className="h-4 w-4" />
-                )}
-                {mutation.isPending ? "Checking…" : "Verify authenticity"}
-              </Button>
+                  Verify authenticity
+                </Button>
+              )}
               <Button
                 className="flex-1"
                 variant={activeView === "format" ? "default" : "outline"}

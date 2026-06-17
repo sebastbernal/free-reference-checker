@@ -1,13 +1,28 @@
-## Plan: Reduce Wayback Machine attempts to one
+## Plan: Add a Stop button to cancel verification
 
 ### Problem
-`waybackCheck()` in `src/lib/reference-sources.server.ts` currently makes **2 attempts** with a 30-second timeout each, so a single slow or failing archive lookup can take up to 60 seconds. With concurrency of 4 references, this makes the whole check feel very slow.
+After clicking **Verify authenticity**, the check runs against many databases and the Internet Archive with no way to cancel. The button just shows "Checking…" and the user must wait it out.
 
-### Change
-In `src/lib/reference-sources.server.ts`, update `waybackCheck()`:
-- Change `ATTEMPTS` from `2` to `1`.
-- Remove the retry loop; call the CDX endpoint once.
-- Keep the 30-second timeout on the single attempt so we still give slow archive servers a chance.
+### Approach
+Wire an `AbortController` into the verification call and turn the running button into a Stop control. TanStack server functions forward an `AbortSignal`, so aborting the client request stops the in-flight network call and immediately returns the UI to its idle state.
+
+### Changes (all in `src/routes/index.tsx`)
+
+1. **Add an abort controller ref**
+   - `const abortRef = useRef<AbortController | null>(null);`
+
+2. **Pass the signal into the server call** in the `useMutation` `mutationFn`:
+   - Create a fresh `AbortController`, store it in `abortRef`, and call `checkFn({ data: { text: input }, signal: controller.signal })`.
+
+3. **Handle abort cleanly**
+   - In `onError`, detect an abort (`err.name === "AbortError"` / signal aborted) and skip the error toast for that case (show a neutral "Verification stopped" toast instead).
+   - Add a `handleStop()` that calls `abortRef.current?.abort()` and `mutation.reset()` so the UI leaves the pending state.
+
+4. **Turn the running button into Stop**
+   - While `mutation.isPending`, render a second **Stop** button (red/destructive variant, `X` icon) next to / replacing the disabled "Checking…" button so the user can cancel. The "Checking…" indicator stays but is no longer a dead end.
 
 ### Result
-Each web reference gets **one** archive check instead of two, cutting the worst-case per-reference latency from ~60s to ~30s.
+During verification the user sees a Stop button; clicking it aborts the request, clears the loading state, and returns to the input view with no results lost.
+
+### Note
+Aborting cancels the client request immediately. The server may briefly finish in-flight lookups before noticing the disconnect, but no results are returned and the UI is fully responsive again.
