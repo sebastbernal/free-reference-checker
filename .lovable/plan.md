@@ -1,29 +1,29 @@
+## Problem
+Both verify-authenticity and check-formatting results include a small `text-xs text-muted-foreground` caveat at the very bottom of the results block. Users miss it because it looks hidden.
+
 ## Goal
-Switching between "Verify authenticity" and "Check formatting" should only change which view is shown — existing results (and the selected citation style) must be preserved and re-displayed when the user returns, instead of being wiped and re-run.
+Relocate each caveat to sit **between the action buttons and the results block**, and upgrade the visual weight so it actually reads as a warning.
 
-## Cause
-- `handleCheck` always runs `setResults(null)` and re-fires the verify mutation.
-- `handleCheckFormat` always runs `setFormatResults(null)` and resets `formatStep` to `"selecting"`.
+## Changes
 
-So clicking a view button is currently "re-run", never "switch view". State already persists to sessionStorage, but the handlers clear it before the user can see it again.
+### 1. Remove old caveat paragraphs
+Delete the two current `text-xs text-muted-foreground` paragraphs:
+- Verify caveat inside `{activeView === "verify" && counts && ...}` block (currently at bottom of results)
+- Format caveat inside `{activeView === "format" && formatCounts && ...}` block (currently at bottom of results)
 
-## Changes (all in `src/routes/index.tsx`)
+### 2. Add new prominent callouts below buttons
+Insert new warning cards **just after the button row** (and after the citation-style selector when in format view), but **before** the loading spinners and results blocks.
 
-1. **Track the text that produced each result set** — add two state values: `verifiedText` and `formattedText` (strings). Set them when a check completes successfully.
+- **Verify view**: Show when `activeView === "verify"` and (`mutation.isPending` or `results` exist).
+  - Text: "This tool may occasionally misclassify authentic references — always double-check flagged items manually."
+  - Style: `Alert` component or a card with `bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100` plus an `AlertTriangle` icon. Text size `text-sm`.
 
-2. **`handleCheck` (Verify button):**
-   - Set `activeView = "verify"`.
-   - If `results` already exist AND `text` is unchanged from `verifiedText`, just switch the view (show existing results) — do not clear or re-run.
-   - Otherwise clear and run the mutation as today, and record `verifiedText = text` on success.
+- **Format view**: Show when `activeView === "format"` and (`formatStep === "selecting"` or `formatResults` exist).
+  - Text: "Formatting checks are heuristic and can't see italics in pasted text — treat the ideal version as a guide, not a final answer."
+  - Same amber/warning card style.
 
-3. **`handleCheckFormat` (Check formatting button):**
-   - Set `activeView = "format"`.
-   - If `formatResults` already exist AND `text` is unchanged from `formattedText`, keep `formatStep = "done"` and the current `formatStyle` (results re-shown, style highlight preserved) — do not clear or reset.
-   - Otherwise set `formatStep = "selecting"` and clear `formatResults` (as today). Record `formattedText = text` inside `handleSelectStyle` when the check runs.
+### 3. Import `AlertTriangle` from `lucide-react`
+Add to the existing icon import block.
 
-4. **Persist the two new snapshot fields** in the save/restore `useEffect` (add `verifiedText` / `formattedText` to the serialized object and restore them), so the "unchanged text" check still works after a reload.
-
-## Result
-- Run verify → switch to formatting → switch back: verify results still there, not re-fetched.
-- Run formatting with a style → switch away → return: formatting results and the chosen style remain.
-- Editing the pasted text and clicking a view button still triggers a fresh check (text no longer matches the snapshot).
+### Visual outcome
+Users will see the warning immediately after clicking a button, before results load, in a high-contrast amber callout that is impossible to miss.
