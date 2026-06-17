@@ -57,24 +57,41 @@ function parseReferences(raw: string): string[] {
       .replace(/\s+$/, ""),
   );
 
-  const isNewEntry = (line: string): boolean => {
+  // The current reference looks finished: ends with a URL (web refs often have
+  // no trailing period) or with sentence/paren-terminating punctuation.
+  const endsComplete = (buffer: string): boolean => {
+    const b = buffer.trim();
+    if (!b) return false;
+    if (/https?:\/\/\S+$/.test(b)) return true;
+    return /[.)\]]$/.test(b);
+  };
+
+  // The line looks like the genuine start of an APA reference, not a wrapped
+  // continuation (author lists, wrapped titles, split URLs).
+  const looksLikeStart = (line: string): boolean => {
     const s = line.trim();
     if (!s) return false;
     const lower = s.toLowerCase();
     if (lower.startsWith("http") || lower.startsWith("www.") || lower.startsWith("doi"))
       return false;
-    // numbered list markers start a new entry: "1.", "[1]", "(1)"
+    // numbered list markers: "1.", "[1]", "(1)"
     if (/^(\[\d+\]|\(\d+\)|\d+[.)])\s+/.test(s)) return true;
-    if (!s[0].match(/[a-z]/i) || s[0] !== s[0].toUpperCase()) return false;
-    return true;
+    // author pattern: "Surname, X."
+    if (/^[A-Z][\w'’.-]*,\s+[A-Z]\./.test(s)) return true;
+    // organization author with an early year token: "United Nations. (2015)."
+    if (/^[A-Z].{0,80}?\((?:\d{4}[a-z]?|n\.d\.)\)/.test(s)) return true;
+    return false;
   };
+
+  const isNewEntry = (line: string, buffer: string): boolean =>
+    endsComplete(buffer) && looksLikeStart(line);
 
   const entries: string[] = [];
   let current = "";
   for (const ln of cleaned) {
     const s = ln.trim();
     if (!s) continue;
-    if (current && isNewEntry(ln)) {
+    if (current && isNewEntry(ln, current)) {
       entries.push(current.trim());
       current = s;
     } else {
