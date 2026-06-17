@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
