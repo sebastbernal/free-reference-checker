@@ -14,9 +14,7 @@ export function parseReferences(raw: string): string[] {
   // no trailing period) or with sentence/paren-terminating punctuation.
   const endsComplete = (buffer: string): boolean => {
     // Collapse URLs split across lines so a wrapped URL still counts as a tail.
-    const b = buffer
-      .replace(/(https?:\/\/\S+)\s+([a-z0-9%][^\s]*)/g, "$1$2")
-      .trim();
+    const b = mergeWrappedUrl(buffer.trim());
     if (!b) return false;
     if (/https?:\/\/\S+$/.test(b)) return true;
     return /[.)\]]$/.test(b);
@@ -63,27 +61,27 @@ export function parseReferences(raw: string): string[] {
 }
 
 // Rejoin a URL that wrapped across lines (now a space inside the URL). Word
-// processors break long URLs at a hyphen and drop it, so the correct repair is
-// to rejoin the fragments with "-", not to delete the space.
+// processors (Word, Google Docs) wrap long URLs WITHOUT inserting a hyphen, so
+// the correct repair is to concatenate the fragments with no separator. Any
+// hyphen already present in the text (e.g. "climate-ch" + "ange" → "climate-change")
+// is preserved because we never add or remove characters at the join.
 //
-// A fragment after the space is only merged when it looks like a URL path
-// piece: it contains "-" or "/", or it is entirely lowercase (a mid-word wrap).
-// Fragments starting with sentence punctuation (e.g. "(Accessed…") are left
-// alone so trailing prose after a URL isn't swallowed.
+// A token after the space is only merged when it looks like a URL continuation:
+// it starts lowercase (a mid-word wrap), or it is URL-ish (contains a digit, "_",
+// ".", "-", or "/", e.g. "Footprint_092319.pdf"). A plain capitalized word with
+// none of those (e.g. "Climate") is treated as the next reference's prose.
 function mergeWrappedUrl(entry: string): string {
-  // Fragment is either a path slug (contains "-" or "/", any leading case) or an
-  // entirely lowercase mid-word wrap. A capitalized word with no "-"/"/" (e.g.
-  // "City") is treated as the next reference's prose, not part of the URL.
-  const re =
-    /(https?:\/\/[^\s]+)\s+([A-Za-z0-9%][A-Za-z0-9%._~#?&=+/-]*[-/][A-Za-z0-9%._~#?&=+/-]*|[a-z0-9%][a-z0-9%._~#?&=+]*)/;
+  const re = /(https?:\/\/[^\s]+)\s+([A-Za-z0-9%][^\s]*)/g;
+  const isContinuation = (frag: string): boolean => {
+    if (/^[a-z0-9%]/.test(frag)) return true; // lowercase mid-word wrap
+    return /[0-9_./-]/.test(frag); // capitalized but URL-ish
+  };
   let prev: string;
   let out = entry;
   do {
     prev = out;
-    // If the URL fragment already ends with "-" (the word processor kept the
-    // hyphen at the wrap point) don't add a second one — otherwise insert "-".
-    out = out.replace(re, (_m, url: string, frag: string) =>
-      `${url}${url.endsWith("-") ? "" : "-"}${frag}`,
+    out = out.replace(re, (m, url: string, frag: string) =>
+      isContinuation(frag) ? `${url}${frag}` : m,
     );
   } while (out !== prev);
   return out;
