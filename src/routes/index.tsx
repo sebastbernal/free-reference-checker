@@ -285,7 +285,6 @@ function Index() {
 
   const clearFormat = () => {
     setFormatResults(null);
-    setFormatText("");
   };
 
   const formatCounts = formatResults
