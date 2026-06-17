@@ -145,6 +145,9 @@ function Index() {
   const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
     null,
   );
+  const [activeView, setActiveView] = useState<"verify" | "format" | null>(
+    null,
+  );
   const [restored, setRestored] = useState(false);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
