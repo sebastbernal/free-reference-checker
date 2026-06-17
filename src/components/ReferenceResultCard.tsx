@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Archive,
+  Bot,
   BookOpen,
   CheckCircle2,
   Globe,
