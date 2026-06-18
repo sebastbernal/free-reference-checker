@@ -166,23 +166,24 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
             const links = buildSearchLinks(result.reference, result.citedTitle);
             const btn =
               "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground/80 hover:bg-muted hover:text-foreground transition-colors no-underline";
-            const openSearch = (url: string) =>
-              window.open(url, "_blank", "noopener,noreferrer");
             return (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                   <Search className="h-3.5 w-3.5" />
                   Couldn't auto-verify — search manually:
                 </span>
-                <button type="button" onClick={() => openSearch(links.scholar)} className={btn}>
+                <a href={links.scholar} target="_blank" rel="noreferrer" className={btn}>
                   Google Scholar
-                </button>
-                <button type="button" onClick={() => openSearch(links.books)} className={btn}>
-                  Google Books
-                </button>
-                <button type="button" onClick={() => openSearch(links.google)} className={btn}>
-                  Google
-                </button>
+                </a>
+                <a href={links.books} target="_blank" rel="noreferrer" className={btn}>
+                  Open Library
+                </a>
+                <a href={links.web} target="_blank" rel="noreferrer" className={btn}>
+                  DuckDuckGo
+                </a>
+                <a href={links.bing} target="_blank" rel="noreferrer" className={btn}>
+                  Bing
+                </a>
               </div>
             );
           })()}
