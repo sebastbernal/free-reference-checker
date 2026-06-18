@@ -1,41 +1,47 @@
-## What I tested (in a real browser, reproducing the preview's sandboxed iframe)
+## Goal
 
-I embedded the running app in a sandboxed iframe (same conditions that cause your error) and clicked each search provider, checking whether the new tab actually loads:
+Unify the site metadata under **"Free Reference Checker"** and make the social image actually render when the link is shared on **WhatsApp** (and other platforms).
 
-```text
-Provider                 Result in sandboxed preview
------------------------  ---------------------------
-Google (www.google.com)  BLOCKED  -> chrome-error (your ERR_BLOCKED_BY_RESPONSE)
-Google Books             BLOCKED  -> chrome-error
-Google Scholar           OPENED   (works today)
-DuckDuckGo               OPENED
-Open Library             OPENED
-Bing                     OPENED
-```
+**Description to use everywhere:**
+> Verify the Authenticity of Academic & Website References Easily, Instantly and Free.
 
-**Root cause (confirmed, not guessed):** the preview runs your app inside a sandboxed iframe. Any new tab it opens inherits that sandbox, and `www.google.com` / `books.google.com` return response headers that refuse to load in a sandboxed browsing context — that is the `ERR_BLOCKED_BY_RESPONSE`. Scholar, DuckDuckGo, Open Library, and Bing send no such restriction, so they open. Switching `<a>` to `window.open` does not help (I tested both); the blocker is Google, not how we open the link.
+## Why the WhatsApp image isn't showing
 
-## The fix (every button uses a provider I verified opens)
+The current `og:image` (`storage.googleapis.com/.../45e88c23...`) is a **718 KB PNG**. WhatsApp only renders preview images under roughly **300 KB** and works most reliably with a 1200×630 JPG served over HTTPS with explicit dimensions. The oversized PNG is why WhatsApp shows the link with no image.
 
-Edit `src/lib/search-links.ts` to point the failing buttons at providers that actually work, keeping the same query text:
+## Changes
 
-- **Scholar** -> `scholar.google.com` (unchanged, already works)
-- **Books** -> Open Library: `https://openlibrary.org/search?q=...` (verified OPENED)
-- **Web** -> DuckDuckGo: `https://duckduckgo.com/?q=...` (verified OPENED)
-- **Bing** -> `https://www.bing.com/search?q=...` (verified OPENED)
+### 1. New optimized share image
+- Create a **1200×630 JPG under ~300 KB** (derived from the existing app icon / brand) and add it to the project at `public/og-image.jpg` so it's served from `https://free-reference-checker.lovable.app/og-image.jpg` (the project's own HTTPS domain, with a real `.jpg` extension WhatsApp likes).
 
-In `src/components/ReferenceResultCard.tsx`, update button labels to match ("Google Scholar", "Open Library", "DuckDuckGo", "Bing"), and revert the buttons back to plain `<a target="_blank" rel="noreferrer">` links since these providers open normally — no `window.open` needed.
+### 2. `src/routes/index.tsx` — homepage `head()`
+- `title` → **"Free Reference Checker"**
+- `og:title` / `twitter:title` → **"Free Reference Checker"**
+- `description` / `og:description` / `twitter:description` → the new description above
+- Add `og:url` + leaf `canonical` → `https://free-reference-checker.lovable.app/`
+- Add the WhatsApp-friendly image tags (absolute URLs):
+  - `og:image` → `https://free-reference-checker.lovable.app/og-image.jpg`
+  - `og:image:secure_url` → same URL
+  - `og:image:type` → `image/jpeg`
+  - `og:image:width` → `1200`, `og:image:height` → `630`
+  - `og:image:alt` → short description
+  - `twitter:image` → same URL, `twitter:card` → `summary_large_image`
 
-## Verification
+### 3. `src/routes/__root.tsx` — sitewide defaults
+- Keep `title: "Free Reference Checker"`; update `description` / `og:description` / `twitter:description` to the new description.
+- Remove the old 718 KB `og:image` / `twitter:image` from the root (a root-level image overrides every page). Keep `og:type: website`, viewport, charSet, favicon, author, and `twitter:site` here.
 
-After the change I will re-run the same sandboxed-iframe browser test against the live preview, click all four buttons on a failed reference, and confirm each new tab loads a real results page (no `chrome-error`). I will only report it fixed once that passes.
+## WhatsApp specifics being addressed
 
-## Scope
+- Image under 300 KB ✔
+- Absolute HTTPS URL with `.jpg` extension ✔
+- Explicit `og:image:width` / `og:image:height` / `og:image:type` ✔ (WhatsApp uses these to decide whether to fetch/show the image)
 
-- `src/lib/search-links.ts`: swap the two blocked Google URLs for Open Library + DuckDuckGo; add bing URL; query-building logic unchanged.
-- `src/components/ReferenceResultCard.tsx`: relabel three buttons and add the fourth Bing button; revert to plain anchor links.
-- No changes to verification logic, no API calls, no backend.
+## Result
 
-## Trade-off you should know
+Tab, WhatsApp/Facebook/LinkedIn/Twitter previews, and the Share-menu settings all read **"Free Reference Checker"** with the one description and a properly rendering share image.
 
-On your **published** site (not in a sandbox), the original Google links would have worked. I'm proposing DuckDuckGo + Open Library + Bing because they work in **both** the preview and the published site, so what you see while building matches production. If you'd rather keep Google on the published site and accept that those two buttons won't open inside the Lovable editor preview, tell me and I'll keep Google instead.
+## Notes
+
+- WhatsApp aggressively caches link previews. After publishing, an already-shared link may keep the old (image-less) preview for a while; sharing the URL with a cache-buster (e.g. `?v=2`) or waiting for the cache to expire forces a refresh.
+- This is a frontend change — it goes live after you click Update/Publish.

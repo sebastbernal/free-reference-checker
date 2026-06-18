@@ -106,22 +106,32 @@ const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
 // Element-type filter for the formatting view (built from detected types).
 type ElementFilter = ElementType | "all";
 
+const SITE_URL = "https://free-reference-checker.lovable.app";
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const SITE_DESCRIPTION =
+  "Verify the Authenticity of Academic & Website References Easily, Instantly and Free.";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Reference Checker — authenticity & citation format" },
-      {
-        name: "description",
-        content:
-          "Verify references for authenticity against CrossRef, Semantic Scholar, OpenAlex, arXiv and DBLP, check web links for liveness, and validate citation formatting against APA, MLA, Harvard and Chicago styles.",
-      },
-      { property: "og:title", content: "Reference Checker" },
-      {
-        property: "og:description",
-        content:
-          "Detect likely-fabricated references and check citation formatting. Verifies DOIs and titles across scholarly databases, live URLs and the Internet Archive, plus APA, MLA, Harvard and Chicago formatting.",
-      },
+      { title: "Free Reference Checker" },
+      { name: "description", content: SITE_DESCRIPTION },
+      { property: "og:title", content: "Free Reference Checker" },
+      { property: "og:description", content: SITE_DESCRIPTION },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: `${SITE_URL}/` },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:secure_url", content: OG_IMAGE },
+      { property: "og:image:type", content: "image/jpeg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Free Reference Checker" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Free Reference Checker" },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
   }),
   component: Index,
 });
