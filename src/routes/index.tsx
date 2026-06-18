@@ -207,6 +207,7 @@ function Index() {
   const [formatStep, setFormatStep] = useState<"idle" | "selecting" | "done">("idle");
   const [restored, setRestored] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [processing, setProcessing] = useState<string | null>(null);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -351,6 +352,7 @@ function Index() {
   };
 
   const handleFile = async (file: File, setter: (value: string) => void) => {
+    setProcessing(file.name);
     try {
       const extracted = await extractTextFromFile(file);
       if (!extracted.trim()) {
@@ -361,6 +363,8 @@ function Index() {
       toast.success(`Loaded ${file.name}`);
     } catch (e) {
       toast.error(`Failed to read file: ${(e as Error).message}`);
+    } finally {
+      setProcessing(null);
     }
   };
 
