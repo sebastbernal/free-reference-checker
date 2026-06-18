@@ -39,13 +39,11 @@ import {
 } from "@/lib/format-check";
 
 const STORAGE_KEY = "reference-checker-state";
+// Bump whenever the persisted shape changes so incompatible old data is dropped
+// instead of restored (e.g. FormatResult.ideal: string -> IdealSegment[]).
+const STORAGE_VERSION = 2;
 
 const VERSION = "1.0.0";
-const BUILD_DATE = new Date().toLocaleDateString("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
 
 type Filter = Verdict | "all";
 
@@ -220,6 +218,8 @@ function Index() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  // Computed after mount only — avoids SSR/client date mismatch at midnight.
+  const [buildDate, setBuildDate] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyResultsRef = useRef<HTMLDivElement>(null);
   const formatResultsRef = useRef<HTMLDivElement>(null);
@@ -228,10 +228,19 @@ function Index() {
 
   // Restore previous session state after mount (avoids SSR mismatch).
   useEffect(() => {
+    // Format the build date on the client only, so server and client agree.
+    setBuildDate(
+      new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    );
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as {
+          version?: number;
           text?: string;
           results?: ReferenceResult[] | null;
           verifiedText?: string;
@@ -244,6 +253,12 @@ function Index() {
           activeView?: "verify" | "format" | null;
           formatStep?: "idle" | "selecting" | "done";
         };
+        // Discard data from an older, incompatible persisted shape.
+        if (saved.version !== STORAGE_VERSION) {
+          sessionStorage.removeItem(STORAGE_KEY);
+          setRestored(true);
+          return;
+        }
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
         if (typeof saved.verifiedText === "string") setVerifiedText(saved.verifiedText);
@@ -273,6 +288,7 @@ function Index() {
       sessionStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
+          version: STORAGE_VERSION,
           text,
           results,
           verifiedText,
@@ -1148,7 +1164,8 @@ function Index() {
           >
             GitHub
           </a>
-          <br />v{VERSION} · Updated {BUILD_DATE}
+          <br />v{VERSION}
+          {buildDate ? ` · Updated ${buildDate}` : ""}
         </footer>
       </main>
 
