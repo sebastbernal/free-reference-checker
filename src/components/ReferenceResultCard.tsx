@@ -7,12 +7,14 @@ import {
   Globe,
   GraduationCap,
   HelpCircle,
+  Search,
   XCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { buildSearchLinks } from "@/lib/search-links";
 import type { ReferenceResult, Verdict } from "@/lib/reference-check.functions";
 
 export const VERDICT_META: Record<
