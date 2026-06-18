@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { parseReferences } from "./parse-references";
+import { repairUrl } from "./url-repair";
 import {
   arxivByTitle,
   crossrefByDoi,
@@ -356,6 +357,19 @@ async function processReferenceCore(n: number, ref: string): Promise<ReferenceRe
       base.notes =
         `Couldn't reach the page from our server (${http.status}) — ` +
         `sites sometimes block automated requests. Verify manually.${archive}${agingNote}`;
+      return base;
+    }
+
+    // 4a. The dead link may be copy-paste corruption (a hyphen dropped at a
+    //     line-wrap, e.g. "science-everyone" -> "scienceeveryone"). Try bounded,
+    //     parallel hyphenation repairs before falling back to the archive.
+    const repairedUrl = await repairUrl(url);
+    if (repairedUrl) {
+      base.url = repairedUrl;
+      base.verdict = "real";
+      base.notes =
+        `Live page found after correcting a copy-paste formatting error in the URL ` +
+        `(original returned HTTP ${http.status}).${agingNote}`;
       return base;
     }
 
