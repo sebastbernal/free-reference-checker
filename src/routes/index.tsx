@@ -1164,7 +1164,8 @@ function Index() {
           >
             GitHub
           </a>
-          <br />v{VERSION} · Updated {BUILD_DATE}
+          <br />v{VERSION}
+          {buildDate ? ` · Updated ${buildDate}` : ""}
         </footer>
       </main>
 
