@@ -1,47 +1,42 @@
-## Goal
+# Hero Section Redesign — Free Reference Checker
 
-Unify the site metadata under **"Free Reference Checker"** and make the social image actually render when the link is shared on **WhatsApp** (and other platforms).
+Refine the homepage hero (`src/routes/index.tsx`, lines 504–525) using your selected **Academic minimalist** direction. The redesign fixes the three issues you raised and keeps the existing functionality (input, upload, check buttons) untouched.
 
-**Description to use everywhere:**
-> Verify the Authenticity of Academic & Website References Easily, Instantly and Free.
+## What changes
 
-## Why the WhatsApp image isn't showing
+### 1. Invert the typographic hierarchy
+Per your note, the brand label becomes the dominant element and the headline shrinks below it:
+- **Brand label** "Free Reference Checker" → large, bold display text (≈ `text-4xl`/`text-5xl`), the visual anchor of the section.
+- A small uppercase eyebrow ("Reference authenticity & citation format") sits above it as a refined accent.
+- **H1 headline** → smaller, lighter weight (≈ `text-xl`/`text-2xl`), describing what the tool does. Kept as the semantic `<h1>` for SEO even though it's visually secondary.
 
-The current `og:image` (`storage.googleapis.com/.../45e88c23...`) is a **718 KB PNG**. WhatsApp only renders preview images under roughly **300 KB** and works most reliably with a 1200×630 JPG served over HTTPS with explicit dimensions. The oversized PNG is why WhatsApp shows the link with no image.
+### 2. Match the paragraph width to the title
+The description paragraph currently uses `max-w-2xl` while the title spans the full container. Both the headline and the paragraph will share the same `max-w-2xl` centered container so their line lengths line up cleanly.
 
-## Changes
+### 3. Brand-inspired polish
+Inspired by the social/OG brand image style (clean, academic, trustworthy):
+- A prominent rounded brand icon tile at the top (using the existing `app-icon.png` / shield-check motif), centered.
+- Centered hero layout with generous spacing and a subtle entrance.
+- The "under development" notice is preserved, centered under the hero.
 
-### 1. New optimized share image
-- Create a **1200×630 JPG under ~300 KB** (derived from the existing app icon / brand) and add it to the project at `public/og-image.jpg` so it's served from `https://free-reference-checker.lovable.app/og-image.jpg` (the project's own HTTPS domain, with a real `.jpg` extension WhatsApp likes).
+## Design system fidelity
+The prototype used hardcoded `slate`/`blue` utilities. To stay consistent with the app's theming and dark mode, the implementation will use the project's **semantic tokens** (`text-foreground`, `text-muted-foreground`, `text-primary`, `bg-primary`, etc.) rather than literal colors — matching the same visual hierarchy and spacing as the chosen direction.
 
-### 2. `src/routes/index.tsx` — homepage `head()`
-- `title` → **"Free Reference Checker"**
-- `og:title` / `twitter:title` → **"Free Reference Checker"**
-- `description` / `og:description` / `twitter:description` → the new description above
-- Add `og:url` + leaf `canonical` → `https://free-reference-checker.lovable.app/`
-- Add the WhatsApp-friendly image tags (absolute URLs):
-  - `og:image` → `https://free-reference-checker.lovable.app/og-image.jpg`
-  - `og:image:secure_url` → same URL
-  - `og:image:type` → `image/jpeg`
-  - `og:image:width` → `1200`, `og:image:height` → `630`
-  - `og:image:alt` → short description
-  - `twitter:image` → same URL, `twitter:card` → `summary_large_image`
+## Social media image
+No change needed — the share image is already wired up: `og-image.jpg` (the branded 1200×630 graphic) is referenced in the homepage `head()` for `og:image` and `twitter:image`. It will keep showing when the link is shared.
 
-### 3. `src/routes/__root.tsx` — sitewide defaults
-- Keep `title: "Free Reference Checker"`; update `description` / `og:description` / `twitter:description` to the new description.
-- Remove the old 718 KB `og:image` / `twitter:image` from the root (a root-level image overrides every page). Keep `og:type: website`, viewport, charSet, favicon, author, and `twitter:site` here.
+```text
+┌─────────────────────────────────────────┐
+│                [ icon ]                   │
+│        REFERENCE AUTHENTICITY (eyebrow)   │
+│      Free Reference Checker  (LARGE)      │
+│   Check reference authenticity… (smaller) │
+│   ── paragraph, same width as headline ── │
+│        [ under-development notice ]        │
+└─────────────────────────────────────────┘
+```
 
-## WhatsApp specifics being addressed
-
-- Image under 300 KB ✔
-- Absolute HTTPS URL with `.jpg` extension ✔
-- Explicit `og:image:width` / `og:image:height` / `og:image:type` ✔ (WhatsApp uses these to decide whether to fetch/show the image)
-
-## Result
-
-Tab, WhatsApp/Facebook/LinkedIn/Twitter previews, and the Share-menu settings all read **"Free Reference Checker"** with the one description and a properly rendering share image.
-
-## Notes
-
-- WhatsApp aggressively caches link previews. After publishing, an already-shared link may keep the old (image-less) preview for a while; sharing the URL with a cache-buster (e.g. `?v=2`) or waiting for the cache to expire forces a refresh.
-- This is a frontend change — it goes live after you click Update/Publish.
+## Technical notes
+- Only the `<header>` block (lines 504–525) in `src/routes/index.tsx` is edited; no logic, state, or server functions change.
+- Optional subtle fade/slide-in entrance via existing CSS utilities (no new dependency).
+- Text content of the headline and paragraph stays the same wording you have now.
