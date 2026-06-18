@@ -1,10 +1,26 @@
-Replace `src/lib/file-extract.ts` with the provided updated version.
+Fix reference classification so journal articles without a DOI or URL are verified by title instead of being marked "offline".
 
 **What changes:**
-- Adds `urlKey()` — compares URLs by host+path (ignores query/fragment).
-- Adds `spliceHiddenLinks()` — for each annotation URL not already visible in the text, finds the line whose visible URL shares the same host+path, and appends `[link: <url>]` to that line. If no match is found, the link is skipped instead of misattached.
-- Updates the PDF branch in `extractTextFromFile` to collect all annotation URLs across pages first, then call `spliceHiddenLinks(text, [...new Set(allLinkUrls)])` once on the combined text — instead of appending hidden links page-by-page at the end of each page.
+1. Add a `looksLikeJournalArticle(ref: string): boolean` helper just above the `extract()` function (around line 100). It detects journal signals:
+   - volume(issue) pattern, e.g. "397(10269)"
+   - page range pattern, e.g. "129–170"
+   - "et al."/ellipsis together with a (year)
+   - recognizable journal-venue words (Journal, Annals, Review, Lancet, Nature, etc.)
 
-**Why:** the previous version appended hidden links at the end of every page, so pdfjs's arbitrary annotation order caused them to pile onto whatever reference happened to be last on that page, corrupting those references and breaking their own URL extraction. The new version attaches each hidden link to the correct reference line.
+2. In the `extract()` function, change the final classification branch from:
+   ```
+   if (doi) kind = "academic";
+   else if (url && !isDoiUrl) kind = "web";
+   else if (url && isDoiUrl) kind = "academic";
+   else kind = "offline";
+   ```
+   to:
+   ```
+   if (doi) kind = "academic";
+   else if (url && !isDoiUrl) kind = "web";
+   else if (url && isDoiUrl) kind = "academic";
+   else if (looksLikeJournalArticle(ref)) kind = "academic"; // no link, but a journal article → verify by title
+   else kind = "offline";
+   ```
 
-**No signature changes:** `extractTextFromFile`, `sliceReferencesSection`, `pageItemsToText`, `cleanBoilerplate`, `pageAnnotationUrls` remain unchanged in their exports and types.
+**Why:** A real journal article that has neither a DOI nor a URL currently falls into the final `else` branch and is classified "offline", which skips the CrossRef/OpenAlex/Semantic Scholar title search entirely and reports "no online trace" — a false red flag. Books and webpages will still classify correctly. The academic branch already does title search when there's no DOI, so routing these references to "academic" is enough to get them verified.
