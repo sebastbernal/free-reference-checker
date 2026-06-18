@@ -1093,7 +1093,15 @@ function Index() {
           >
             Sebastian Bernal Garcia
           </a>{" "}
-          · MIT License · 2026
+          · MIT License · 2026 ·{" "}
+          <a
+            href="https://github.com/sebastbernal/free-reference-checker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-primary underline underline-offset-2"
+          >
+            GitHub
+          </a>
           <br />v{VERSION} · Updated {BUILD_DATE}
         </footer>
       </main>
