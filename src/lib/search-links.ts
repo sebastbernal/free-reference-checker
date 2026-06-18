@@ -4,7 +4,8 @@
 export interface ManualSearchLinks {
   scholar: string;
   books: string;
-  google: string;
+  web: string;
+  bing: string;
 }
 
 // Pull a concise query from the reference: prefer the cited title (quoted as a
@@ -41,7 +42,8 @@ export function buildSearchLinks(
   const q = encodeURIComponent(query);
   return {
     scholar: `https://scholar.google.com/scholar?q=${q}`,
-    books: `https://www.google.com/search?tbm=bks&q=${q}`,
-    google: `https://www.google.com/search?q=${q}`,
+    books: `https://openlibrary.org/search?q=${q}`,
+    web: `https://duckduckgo.com/?q=${q}`,
+    bing: `https://www.bing.com/search?q=${q}`,
   };
 }
