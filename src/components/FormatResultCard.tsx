@@ -127,12 +127,27 @@ export function FormatResultCard({ result }: { result: FormatResult }) {
 
           <div className="mt-3">
             <p className="text-xs font-medium text-muted-foreground">
-              Ideal {STYLE_LABELS[result.style]} format
+              How a {ELEMENT_TYPE_LABELS[result.elementType].toLowerCase()}{" "}
+              should be cited — {STYLE_LABELS[result.style]}
             </p>
             <p className="mt-1 rounded-md bg-muted/50 p-2 text-sm leading-relaxed">
-              {result.ideal}
+              {result.ideal.map((seg, i) =>
+                seg.italic ? (
+                  <em key={i}>{seg.text}</em>
+                ) : (
+                  <span key={i}>{seg.text}</span>
+                ),
+              )}
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              <span className="font-medium">A.A.</span> = the author's initials
+              (e.g. Smith, J.A.); MLA/Chicago use full first names.{" "}
+              <span className="font-medium">Corporate Author</span> = an
+              organization as author (e.g. World Health Organization), used when
+              no individual is credited.
             </p>
           </div>
+
 
           {result.issues.length > 0 ? (
             <div className="mt-3">
