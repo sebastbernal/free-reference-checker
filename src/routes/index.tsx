@@ -288,6 +288,7 @@ function Index() {
       sessionStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
+          version: STORAGE_VERSION,
           text,
           results,
           verifiedText,
