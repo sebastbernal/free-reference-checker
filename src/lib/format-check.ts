@@ -36,13 +36,20 @@ export interface FormatIssue {
   severity: "minor" | "major";
 }
 
+// A run of template text; `italic` parts are rendered in <em> so the generic
+// "ideal" template can show style-correct italics (journal names, book titles…).
+export interface IdealSegment {
+  text: string;
+  italic?: boolean;
+}
+
 export interface FormatResult {
   n: number;
   reference: string;
   style: CitationStyle;
   grade: Grade;
   elementType: ElementType;
-  ideal: string;
+  ideal: IdealSegment[];
   issues: FormatIssue[];
 }
 
