@@ -391,13 +391,14 @@ function checkOne(n: number, ref: string, style: CitationStyle): FormatResult {
     }
   }
 
+  const elementType = detectElementType(ref);
   return {
     n,
     reference: ref,
     style,
     grade: gradeFromIssues(issues),
-    elementType: detectElementType(ref),
-    ideal: buildIdeal(p, style),
+    elementType,
+    ideal: buildIdealTemplate(style, elementType),
     issues,
   };
 }
