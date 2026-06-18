@@ -580,7 +580,7 @@ function Index() {
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       placeholder={
-                        "Paste your references here, or drag & drop a .txt, .docx or .pdf file. \n\n It will process a maximum of 100 references each time. \n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work. \n\n💡 For best results, upload the original PDF or Word file. Copying and pasting can corrupt links and formatting.  "
+                        "Paste your references here, or drag & drop a .txt, .docx or .pdf file. \n\nIt will process a maximum of 100 references each time. \n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work. \n\n💡 For best results, upload the original PDF or Word file. Copying and pasting can corrupt links and formatting.  "
                       }
                       className={cn("min-h-48 font-mono text-sm", dragging && "ring-2 ring-primary ring-offset-2")}
                     />
