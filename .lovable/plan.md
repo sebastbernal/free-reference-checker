@@ -1,21 +1,15 @@
-## Add manual-search buttons to failed reference verifications
+## Problem
 
-Three small, display-only changes — no verification logic is altered.
+In the ReferenceResultCard, the Google Books and Google manual-search links show **"www.google.com is blocked / refused to connect / ERR_BLOCKED_BY_RESPONSE"** when clicked inside the Lovable preview iframe. Google Scholar works fine because scholar.google.com has different frame/popup policies.
 
-### 1. Create `src/lib/search-links.ts`
-New utility that builds Google Scholar, Google Books, and Google search URLs from a reference string and its cited title. Pure URL construction, no API calls.
+## Root Cause
 
-### 2. Add imports to `src/components/ReferenceResultCard.tsx`
-Import `buildSearchLinks` from the new utility and the `Search` icon from `lucide-react`.
+`<a href="..." target="_blank">` links to `www.google.com` are blocked by the browser when the app runs inside a sandboxed iframe. The iframe sandbox/security headers intercept or reject navigation to certain Google domains.
 
-### 3. Insert button block inside `ReferenceResultCard`
-Immediately after the closing `</dl>` and before the closing `</CardContent>`, render a row of three search links (Google Scholar, Google Books, Google) when the verdict is one of: `check`, `no-trace`, `offline`, or `inconclusive`. Each link opens in a new tab. Real and archived verdicts never show these buttons.
+## Fix
 
-### Files touched
-- `src/lib/search-links.ts` — new file
-- `src/components/ReferenceResultCard.tsx` — imports + JSX insertion
+In `src/components/ReferenceResultCard.tsx`, replace the three `<a>` tags (Google Scholar, Google Books, Google) in the manual-search block with `<button>` elements that call `window.open(url, "_blank", "noopener,noreferrer")` via `onClick`. User-initiated `window.open()` is treated as a popup request and bypasses iframe link restrictions.
 
-### No changes to
-- Verification algorithms
-- Verdict types
-- Any other component behavior
+## Scope
+
+Only the manual-search link block inside ReferenceResultCard is touched. No changes to search-links.ts, verification logic, or any other component.
