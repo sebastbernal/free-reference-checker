@@ -245,27 +245,71 @@ export async function extractTextFromFile(file: File): Promise<string> {
     // pages — faster, and avoids pulling body text that confuses detection.
     const LAST_N_PAGES = 60;
     const startPage = Math.max(1, pdf.numPages - LAST_N_PAGES + 1);
+    // Collect visible text and all annotation URLs across the read pages.
     let text = "";
+    const allLinkUrls: string[] = [];
     for (let p = startPage; p <= pdf.numPages; p++) {
       const page = await pdf.getPage(p);
       const content = await page.getTextContent();
-      // Reconstruct line breaks from item positions instead of join(" ").
-      const pageText = pageItemsToText(content.items);
-      // Surface hyperlink targets that aren't already visible in the text — this
-      // is where AI tracking params (utm_source=chatgpt.com etc.) hide. Wrap each
-      // missing URL as "[link: <url>]" on its own line: the leading "[link:" is
-      // non-URL text, so the splitter attaches it to the reference it sits with
-      // (rather than fusing it onto the visible URL), and AI-trace detection —
-      // which scans the whole reference string — still sees the parameter.
-      const linkUrls = await pageAnnotationUrls(page);
-      const hidden = linkUrls
-        .filter((u) => !pageText.includes(u))
-        .map((u) => `[link: ${u}]`);
-      text += pageText + (hidden.length ? "\n" + hidden.join("\n") : "") + "\n";
+      text += pageItemsToText(content.items) + "\n";
+      for (const u of await pageAnnotationUrls(page)) allLinkUrls.push(u);
     }
+    // Some link targets carry info absent from the visible text — notably AI
+    // tracking params (utm_source=chatgpt.com). pdfjs returns annotations in an
+    // arbitrary order, NOT aligned with the text, so we must NOT just append
+    // them. Instead, splice each "hidden" link into the text right after the
+    // line that already mentions the SAME page (matched by host + path prefix),
+    // so the trace attaches to the correct reference. Links whose exact URL is
+    // already visible are dropped (nothing new to add).
+    text = spliceHiddenLinks(text, [...new Set(allLinkUrls)]);
     return sliceReferencesSection(cleanBoilerplate(text));
   }
 
   // Fallback: try to read as text
   return sliceReferencesSection(cleanBoilerplate(await file.text()));
+}
+
+// Compare two URLs by host + path (ignoring query/fragment) to decide whether a
+// link annotation belongs to a given visible URL.
+function urlKey(u: string): string {
+  try {
+    const m = u.match(/^https?:\/\/([^/?#]+)([^?#]*)/i);
+    if (!m) return u.toLowerCase();
+    return (m[1] + m[2]).toLowerCase().replace(/\/+$/, "");
+  } catch {
+    return u.toLowerCase();
+  }
+}
+
+// For each hidden link (one carrying something the visible text lacks, e.g. a
+// utm_source param), insert "[link: <url>]" on its own line immediately AFTER
+// the text line whose visible URL matches it by host+path. If no line matches,
+// the link is skipped (we don't want to misattach it to a random reference).
+function spliceHiddenLinks(text: string, linkUrls: string[]): string {
+  if (linkUrls.length === 0) return text;
+  const lines = text.split("\n");
+  // Precompute the visible-URL key for each line that contains a URL.
+  const lineKeys = lines.map((ln) => {
+    const m = ln.match(/https?:\/\/\S+/);
+    return m ? urlKey(m[0]) : "";
+  });
+
+  for (const link of linkUrls) {
+    // Only act on links that add information: an exact-string match already in
+    // the text means nothing new to surface.
+    if (text.includes(link)) continue;
+    const key = urlKey(link);
+    // Find the line whose visible URL shares this host+path.
+    let targetLine = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lineKeys[i] && lineKeys[i] === key) {
+        targetLine = i;
+        break;
+      }
+    }
+    if (targetLine === -1) continue; // no home for it — skip rather than misattach
+    lines[targetLine] = lines[targetLine] + ` [link: ${link}]`;
+  }
+
+  return lines.join("\n");
 }
