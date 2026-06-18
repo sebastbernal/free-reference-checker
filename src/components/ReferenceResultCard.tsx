@@ -175,7 +175,7 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
                   </span>
                   <a href={result.url} target="_blank" rel="noreferrer" className={btn}>
                     <Globe className="h-3.5 w-3.5" />
-                    Open original URL
+                    Open URL
                   </a>
                 </div>
               );
