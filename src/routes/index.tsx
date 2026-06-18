@@ -603,6 +603,20 @@ function Index() {
                   </span>
                 </div>
               )}
+              {processing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-md border bg-background/95 px-6 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">Processing “{processing}”…</p>
+                    <p className="text-xs text-muted-foreground">
+                      Reading and extracting references — this only takes a moment.
+                    </p>
+                  </div>
+                  <div className="h-1.5 w-48 overflow-hidden rounded-full bg-primary/20">
+                    <div className="h-full w-1/3 animate-progress-indeterminate rounded-full bg-primary" />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
