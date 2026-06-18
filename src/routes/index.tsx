@@ -527,9 +527,9 @@ function Index() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Paste a reference list or upload a file. Citations are verified for authenticity against CrossRef, Semantic
-            Scholar, OpenAlex, arXiv and DBLP, and web links are checked for liveness and against the Internet Archive —
-            then validate their formatting against APA, MLA, Harvard and Chicago styles.
+            Spot AI hallucinations before you grade. Paste a student's reference list and instantly verify every citation
+            against real academic databases. We flag fabricated sources, broken links and formatting mistakes so you can
+            focus on teaching, not detective work.
           </p>
 
           <div className="mx-auto mt-6 flex max-w-2xl items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
