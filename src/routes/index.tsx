@@ -228,10 +228,19 @@ function Index() {
 
   // Restore previous session state after mount (avoids SSR mismatch).
   useEffect(() => {
+    // Format the build date on the client only, so server and client agree.
+    setBuildDate(
+      new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    );
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as {
+          version?: number;
           text?: string;
           results?: ReferenceResult[] | null;
           verifiedText?: string;
@@ -244,6 +253,12 @@ function Index() {
           activeView?: "verify" | "format" | null;
           formatStep?: "idle" | "selecting" | "done";
         };
+        // Discard data from an older, incompatible persisted shape.
+        if (saved.version !== STORAGE_VERSION) {
+          sessionStorage.removeItem(STORAGE_KEY);
+          setRestored(true);
+          return;
+        }
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
         if (typeof saved.verifiedText === "string") setVerifiedText(saved.verifiedText);
