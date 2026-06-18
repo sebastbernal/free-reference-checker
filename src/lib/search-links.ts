@@ -4,7 +4,8 @@
 export interface ManualSearchLinks {
   scholar: string;
   books: string;
-  google: string;
+  web: string;
+  bing: string;
 }
 
 // Pull a concise query from the reference: prefer the cited title (quoted as a
