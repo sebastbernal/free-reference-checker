@@ -201,6 +201,25 @@ function cleanBoilerplate(text: string): string {
     .trim();
 }
 
+// Collect hyperlink target URLs from a PDF page's annotations. In a PDF, a
+// citation's visible text is often the CLEAN url while the real link target —
+// carrying e.g. "?utm_source=chatgpt.com" — lives only in the link annotation.
+// getTextContent() never sees those, so AI-trace detection would miss them.
+// We surface any annotation URL not already in the visible page text.
+async function pageAnnotationUrls(page: any): Promise<string[]> {
+  try {
+    const annots = await page.getAnnotations();
+    const urls: string[] = [];
+    for (const a of annots || []) {
+      const u = a?.url || a?.unsafeUrl;
+      if (typeof u === "string" && /^https?:\/\//i.test(u)) urls.push(u);
+    }
+    return [...new Set(urls)];
+  } catch {
+    return []; // some PDFs / pdfjs builds don't expose annotations
+  }
+}
+
 export async function extractTextFromFile(file: File): Promise<string> {
   const name = file.name.toLowerCase();
 
@@ -231,7 +250,18 @@ export async function extractTextFromFile(file: File): Promise<string> {
       const page = await pdf.getPage(p);
       const content = await page.getTextContent();
       // Reconstruct line breaks from item positions instead of join(" ").
-      text += pageItemsToText(content.items) + "\n";
+      const pageText = pageItemsToText(content.items);
+      // Surface hyperlink targets that aren't already visible in the text — this
+      // is where AI tracking params (utm_source=chatgpt.com etc.) hide. Wrap each
+      // missing URL as "[link: <url>]" on its own line: the leading "[link:" is
+      // non-URL text, so the splitter attaches it to the reference it sits with
+      // (rather than fusing it onto the visible URL), and AI-trace detection —
+      // which scans the whole reference string — still sees the parameter.
+      const linkUrls = await pageAnnotationUrls(page);
+      const hidden = linkUrls
+        .filter((u) => !pageText.includes(u))
+        .map((u) => `[link: ${u}]`);
+      text += pageText + (hidden.length ? "\n" + hidden.join("\n") : "") + "\n";
     }
     return sliceReferencesSection(cleanBoilerplate(text));
   }

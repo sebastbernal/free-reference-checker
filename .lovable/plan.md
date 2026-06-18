@@ -1,37 +1,19 @@
-# Show an upload/processing status overlay on the references textarea
+### Scope
+Replace the entire contents of `src/lib/file-extract.ts` with the exact code provided by the user.
 
-When a file is dropped (or chosen via Upload), the textarea currently sits silent while `extractTextFromFile` runs — the placeholder hint stays visible and the user has no idea anything is happening. This adds a clear status overlay that covers the textarea while the file is being read and parsed, then disappears once the extracted text fills the box.
+### What changes
+1. Add a new `pageAnnotationUrls(page)` async helper that reads a PDF page's link annotations (`page.getAnnotations()`), extracts `url` / `unsafeUrl` fields, filters to `http(s)` URLs, deduplicates, and returns them.
 
-## Changes — `src/routes/index.tsx`
+2. In the PDF branch of `extractTextFromFile`, after reconstructing visible page text with `pageItemsToText`, also call `pageAnnotationUrls(page)`. Any URL present in the annotations but NOT already in the visible text is surfaced as `[link: <url>]` on its own line. These hidden URLs are where AI tracking parameters (e.g. `?utm_source=chatgpt.com`) live in PDFs — the visible citation looks clean but the hyperlink target carries the trace.
 
-### 1. New state
-Add a `processing` state holding the current file name (or `null` when idle):
+3. No signature changes — `extractTextFromFile` and `sliceReferencesSection` keep the same exports and types. TXT and DOCX branches untouched.
 
-```ts
-const [processing, setProcessing] = useState<string | null>(null);
-```
+### Why
+Downstream AI-trace detection scans reference strings for parameters like `utm_source=chatgpt.com`. When a PDF's visible text shows a clean URL but the actual hyperlink target hides the tracking parameter in an annotation, the scanner misses it. By surfacing those hidden targets as `[link: <url>]` markers inside the extracted text, the scanner still sees the parameter.
 
-### 2. Drive the state from `handleFile`
-Wrap the existing extraction flow so it flips `processing` on/off:
+### Testing
+- Build passes (`bun run build`).
+- Upload a PDF with hyperlinked references where the annotation URL differs from the visible text; verify the `[link: ...]` markers appear in the extracted text shown in the UI or console.
 
-- Set `setProcessing(file.name)` at the start (before `extractTextFromFile`).
-- Clear it with `setProcessing(null)` in a `finally` block so it always resets, on success or error.
-
-The existing toast + `setter(extracted)` logic stays unchanged.
-
-### 3. Status overlay over the textarea
-Inside the existing `relative` drop container (alongside the `dragging` overlay), add a block rendered only while `processing` is truthy. It covers the textarea (`absolute inset-0`), hiding the placeholder, and shows:
-
-- A spinner (the project already uses `lucide-react`; use `Loader2` with `animate-spin`).
-- A primary line: `Processing "<filename>"…`
-- A secondary line: `Reading and extracting references — this only takes a moment.`
-- An indeterminate progress bar using the existing `@/components/ui/progress` component (or a simple animated bar) so it reads as a status bar.
-
-Styling mirrors the current drag overlay (`rounded-md border bg-background/95`, centered column, muted text) so it stays on-theme and uses semantic tokens — no hardcoded colors.
-
-While processing, the overlay sits on top, so the shadow/placeholder text is replaced by the status, exactly as requested.
-
-## Technical notes
-- Extraction runs in-browser and is fast for typical files, but the overlay guarantees feedback regardless of size; the `finally` reset prevents a stuck spinner if parsing throws.
-- Both entry points (drag-and-drop `onDrop` and the hidden file `input onChange`) already funnel through `handleFile`, so a single change covers both.
-- No backend, no business-logic, no parsing changes — purely a presentational state added to the existing component.
+### Files changed
+- `src/lib/file-extract.ts` — full replacement (same exports, no signature changes).
