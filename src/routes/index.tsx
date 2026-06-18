@@ -502,20 +502,37 @@ function Index() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-muted/30">
-        <div className="mx-auto max-w-4xl px-4 py-10">
-          <div className="flex items-center gap-2 text-primary">
-            <img src={appIcon} alt="Free reference checker logo" width={24} height={24} className="h-6 w-6 rounded" />
-            <span className="text-sm font-semibold uppercase tracking-wide">Free reference checker</span>
+        <div className="mx-auto max-w-4xl px-4 py-14 text-center sm:py-16">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <img
+                src={appIcon}
+                alt="Free Reference Checker logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-lg"
+              />
+            </div>
           </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Reference authenticity &amp; citation format
+          </p>
+          <div className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+            Free Reference Checker
+          </div>
+
+          <h1 className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-snug text-foreground/80 sm:text-xl">
             Check reference authenticity and citation format for free.
           </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
+
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
             Paste a reference list or upload a file. Citations are verified for authenticity against CrossRef, Semantic
             Scholar, OpenAlex, arXiv and DBLP, and web links are checked for liveness and against the Internet Archive —
             then validate their formatting against APA, MLA, Harvard and Chicago styles.
           </p>
-          <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+
+          <div className="mx-auto mt-6 flex max-w-2xl items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
             <p>
               This tool is currently under development — please verify all results independently before relying on them.
@@ -523,6 +540,7 @@ function Index() {
           </div>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-4xl px-4 py-8 pb-24">
         <Card>
