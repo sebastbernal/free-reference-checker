@@ -24,20 +24,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { FormatResultCard } from "@/components/FormatResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
-import {
-  checkReferences,
-  type ReferenceResult,
-  type Verdict,
-} from "@/lib/reference-check.functions";
+import { checkReferences, type ReferenceResult, type Verdict } from "@/lib/reference-check.functions";
 import {
   checkFormatting,
   ELEMENT_TYPE_LABELS,
@@ -86,13 +77,11 @@ const FILTER_COLORS: Record<Filter, { active: string; inactive: string }> = {
   },
   "no-trace": {
     active: "bg-red-500 text-white hover:bg-red-600 border-red-500",
-    inactive:
-      "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950",
+    inactive: "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950",
   },
   archived: {
     active: "bg-sky-500 text-white hover:bg-sky-600 border-sky-500",
-    inactive:
-      "border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950",
+    inactive: "border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950",
   },
   offline: {
     active: "bg-muted-foreground text-background hover:bg-muted-foreground/90",
@@ -142,7 +131,6 @@ Smith, J., & Doe, A. (2021). A completely fabricated study on quantum widgets. J
 IPCC (2023). Climate change synthesis report. https://www.ipcc.ch/report/ar6/syr/
 World Health Organization (2009). Pandemic influenza preparedness archived page. https://www.who.int/this-page-no-longer-exists-12345
 Kahneman, D. (2011). Thinking, fast and slow. Farrar, Straus and Giroux.`;
-
 
 const STYLE_OPTIONS: { value: CitationStyle; label: string }[] = [
   { value: "apa7", label: STYLE_LABELS.apa7 },
@@ -213,16 +201,10 @@ function Index() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [elementFilter, setElementFilter] = useState<ElementFilter>("all");
   const [formatStyle, setFormatStyle] = useState<CitationStyle>("apa7");
-  const [formatResults, setFormatResults] = useState<FormatResult[] | null>(
-    null,
-  );
+  const [formatResults, setFormatResults] = useState<FormatResult[] | null>(null);
   const [formattedText, setFormattedText] = useState("");
-  const [activeView, setActiveView] = useState<"verify" | "format" | null>(
-    null,
-  );
-  const [formatStep, setFormatStep] = useState<"idle" | "selecting" | "done">(
-    "idle",
-  );
+  const [activeView, setActiveView] = useState<"verify" | "format" | null>(null);
+  const [formatStep, setFormatStep] = useState<"idle" | "selecting" | "done">("idle");
   const [restored, setRestored] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [showHow, setShowHow] = useState(false);
@@ -253,25 +235,18 @@ function Index() {
         };
         if (typeof saved.text === "string") setText(saved.text);
         if (Array.isArray(saved.results)) setResults(saved.results);
-        if (typeof saved.verifiedText === "string")
-          setVerifiedText(saved.verifiedText);
+        if (typeof saved.verifiedText === "string") setVerifiedText(saved.verifiedText);
         if (saved.filter) setFilter(saved.filter);
         if (saved.typeFilter) setTypeFilter(saved.typeFilter);
         if (saved.elementFilter) setElementFilter(saved.elementFilter);
         if (saved.formatStyle) setFormatStyle(saved.formatStyle);
-        if (Array.isArray(saved.formatResults))
-          setFormatResults(saved.formatResults);
-        if (typeof saved.formattedText === "string")
-          setFormattedText(saved.formattedText);
+        if (Array.isArray(saved.formatResults)) setFormatResults(saved.formatResults);
+        if (typeof saved.formattedText === "string") setFormattedText(saved.formattedText);
         if (saved.activeView) setActiveView(saved.activeView);
         if (saved.formatStep) {
           setFormatStep(saved.formatStep);
         } else if (saved.activeView === "format") {
-          setFormatStep(
-            Array.isArray(saved.formatResults) && saved.formatResults.length
-              ? "done"
-              : "selecting",
-          );
+          setFormatStep(Array.isArray(saved.formatResults) && saved.formatResults.length ? "done" : "selecting");
         }
       }
     } catch {
@@ -331,9 +306,7 @@ function Index() {
       return checkFn({ data: { text: input }, signal: controller.signal });
     },
     onSuccess: (data, input) => {
-      const sorted = [...data.results].sort(
-        (a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict],
-      );
+      const sorted = [...data.results].sort((a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict]);
       setResults(sorted);
       setVerifiedText(input);
       if (!data.results.length) {
@@ -377,10 +350,7 @@ function Index() {
     mutation.mutate(text);
   };
 
-  const handleFile = async (
-    file: File,
-    setter: (value: string) => void,
-  ) => {
+  const handleFile = async (file: File, setter: (value: string) => void) => {
     try {
       const extracted = await extractTextFromFile(file);
       if (!extracted.trim()) {
@@ -476,9 +446,7 @@ function Index() {
     ? {
         total: results.length,
         real: results.filter((r) => r.verdict === "real").length,
-        flagged: results.filter((r) =>
-          ["check", "no-trace", "archived", "inconclusive"].includes(r.verdict),
-        ).length,
+        flagged: results.filter((r) => ["check", "no-trace", "archived", "inconclusive"].includes(r.verdict)).length,
         offline: results.filter((r) => r.verdict === "offline").length,
       }
     : null;
@@ -499,9 +467,7 @@ function Index() {
 
   const filteredResults = results
     ? results.filter(
-        (r) =>
-          (filter === "all" || r.verdict === filter) &&
-          (typeFilter === "all" || r.type === typeFilter),
+        (r) => (filter === "all" || r.verdict === filter) && (typeFilter === "all" || r.type === typeFilter),
       )
     : [];
 
@@ -524,32 +490,21 @@ function Index() {
       <header className="border-b bg-muted/30">
         <div className="mx-auto max-w-4xl px-4 py-10">
           <div className="flex items-center gap-2 text-primary">
-            <img
-              src={appIcon}
-              alt="Free reference checker logo"
-              width={24}
-              height={24}
-              className="h-6 w-6 rounded"
-            />
-            <span className="text-sm font-semibold uppercase tracking-wide">
-              Free reference checker
-            </span>
+            <img src={appIcon} alt="Free reference checker logo" width={24} height={24} className="h-6 w-6 rounded" />
+            <span className="text-sm font-semibold uppercase tracking-wide">Free reference checker</span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Check reference authenticity and citation format for free.
           </h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Paste a reference list or upload a file. Citations are verified for
-            authenticity against CrossRef, Semantic Scholar, OpenAlex, arXiv and
-            DBLP, and web links are checked for liveness and against the Internet
-            Archive — then validate their formatting against APA, MLA, Harvard
-            and Chicago styles.
+            Paste a reference list or upload a file. Citations are verified for authenticity against CrossRef, Semantic
+            Scholar, OpenAlex, arXiv and DBLP, and web links are checked for liveness and against the Internet Archive —
+            then validate their formatting against APA, MLA, Harvard and Chicago styles.
           </p>
           <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
             <p>
-              This tool is currently under development — please verify all
-              results independently before relying on them.
+              This tool is currently under development — please verify all results independently before relying on them.
             </p>
           </div>
         </div>
@@ -563,18 +518,10 @@ function Index() {
                 Paste references or drop/upload a file
               </label>
               <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setText(EXAMPLE)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setText(EXAMPLE)}>
                   Try example
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                   <Upload className="h-4 w-4" />
                   Upload
                 </Button>
@@ -633,17 +580,14 @@ function Index() {
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       placeholder={
-                        "Paste up to 100 references here, or upload a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work.\n\n💡 For best results, upload the original PDF or Word file. Copying and pasting can corrupt links and formatting."
+                        "Paste your references here, or drag & drop a .txt, .docx or .pdf file. · up to 100 references.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work.\n\n💡 For best results, upload the original PDF or Word file. Copying and pasting can corrupt links and formatting."
                       }
-                      className={cn(
-                        "min-h-48 font-mono text-sm",
-                        dragging && "ring-2 ring-primary ring-offset-2",
-                      )}
+                      className={cn("min-h-48 font-mono text-sm", dragging && "ring-2 ring-primary ring-offset-2")}
                     />
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-xs text-center">
-                    💡 For best results, upload the original PDF or Word file.
-                    Copying and pasting can corrupt links and formatting.
+                    💡 For best results, upload the original PDF or Word file. Copying and pasting can corrupt links and
+                    formatting.
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -657,29 +601,19 @@ function Index() {
               )}
             </div>
 
-
-
             <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
               <p>
-                <span className="font-medium text-foreground">Your privacy:</span>{" "}
-                Uploaded files are processed entirely in your browser — they are
-                never uploaded to or stored on any server. Only the extracted
-                reference text is sent to third-party scholarly APIs (CrossRef,
-                Semantic Scholar, OpenAlex, arXiv, DBLP) and link-checking
-                services during verification.
+                <span className="font-medium text-foreground">Your privacy:</span> Uploaded files are processed entirely
+                in your browser — they are never uploaded to or stored on any server. Only the extracted reference text
+                is sent to third-party scholarly APIs (CrossRef, Semantic Scholar, OpenAlex, arXiv, DBLP) and
+                link-checking services during verification.
               </p>
             </div>
 
-
-
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               {mutation.isPending ? (
-                <Button
-                  className="flex-1"
-                  variant="destructive"
-                  onClick={handleStop}
-                >
+                <Button className="flex-1" variant="destructive" onClick={handleStop}>
                   <X className="h-4 w-4" />
                   Stop verification
                 </Button>
@@ -703,30 +637,23 @@ function Index() {
               </Button>
             </div>
 
-            {activeView === "format" &&
-              (formatStep === "selecting" || formatStep === "done") && (
-                <div className="mt-4 rounded-lg border bg-muted/30 p-4">
-                  <p className="text-sm font-medium">
-                    Select a citation style to run the formatting check
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {STYLE_OPTIONS.map((s) => (
-                      <Button
-                        key={s.value}
-                        variant={
-                          formatStep === "done" && formatStyle === s.value
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        onClick={() => handleSelectStyle(s.value)}
-                      >
-                        {s.label}
-                      </Button>
-                    ))}
-                  </div>
+            {activeView === "format" && (formatStep === "selecting" || formatStep === "done") && (
+              <div className="mt-4 rounded-lg border bg-muted/30 p-4">
+                <p className="text-sm font-medium">Select a citation style to run the formatting check</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {STYLE_OPTIONS.map((s) => (
+                    <Button
+                      key={s.value}
+                      variant={formatStep === "done" && formatStyle === s.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleSelectStyle(s.value)}
+                    >
+                      {s.label}
+                    </Button>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -734,8 +661,7 @@ function Index() {
           <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
             <p>
-              This tool may occasionally misclassify authentic references —
-              always double-check flagged items manually.
+              This tool may occasionally misclassify authentic references — always double-check flagged items manually.
             </p>
           </div>
         )}
@@ -755,16 +681,15 @@ function Index() {
           </div>
         )}
 
-        {activeView === "format" &&
-          (formatStep === "selecting" || formatResults) && (
-            <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-              <p>
-                Formatting checks are heuristic and can't see italics in pasted
-                text — treat the ideal version as a guide, not a final answer.
-              </p>
-            </div>
-          )}
+        {activeView === "format" && (formatStep === "selecting" || formatResults) && (
+          <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>
+              Formatting checks are heuristic and can't see italics in pasted text — treat the ideal version as a guide,
+              not a final answer.
+            </p>
+          </div>
+        )}
 
         {activeView === "verify" && mutation.isPending && (
           <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -783,17 +708,9 @@ function Index() {
                 </span>
                 <span className="text-muted-foreground">·</span>
                 <span className="font-medium">{counts.total} checked</span>
-                <span className="text-emerald-600 dark:text-emerald-400">
-                  {counts.real} real
-                </span>
-                <span className="text-amber-600 dark:text-amber-400">
-                  {counts.flagged} flagged
-                </span>
-                {counts.offline > 0 && (
-                  <span className="text-muted-foreground">
-                    {counts.offline} offline
-                  </span>
-                )}
+                <span className="text-emerald-600 dark:text-emerald-400">{counts.real} real</span>
+                <span className="text-amber-600 dark:text-amber-400">{counts.flagged} flagged</span>
+                {counts.offline > 0 && <span className="text-muted-foreground">{counts.offline} offline</span>}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={downloadCsv}>
@@ -805,10 +722,7 @@ function Index() {
 
             <div className="mt-4 flex flex-wrap gap-2">
               {FILTERS.map((f) => {
-                const count =
-                  f.value === "all"
-                    ? counts.total
-                    : verdictCounts[f.value] ?? 0;
+                const count = f.value === "all" ? counts.total : (verdictCounts[f.value] ?? 0);
                 if (f.value !== "all" && count === 0) return null;
                 const active = filter === f.value;
                 const color = FILTER_COLORS[f.value];
@@ -821,21 +735,16 @@ function Index() {
                     onClick={() => setFilter(f.value)}
                   >
                     {f.label}
-                    <span className={cn("ml-1", active ? "opacity-80" : "opacity-70")}>
-                      {count}
-                    </span>
+                    <span className={cn("ml-1", active ? "opacity-80" : "opacity-70")}>{count}</span>
                   </Button>
                 );
               })}
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
-                Source type:
-              </span>
+              <span className="text-xs font-medium text-muted-foreground">Source type:</span>
               {TYPE_FILTERS.map((t) => {
-                const count =
-                  t.value === "all" ? counts.total : typeCounts[t.value] ?? 0;
+                const count = t.value === "all" ? counts.total : (typeCounts[t.value] ?? 0);
                 if (t.value !== "all" && count === 0) return null;
                 const active = typeFilter === t.value;
                 return (
@@ -846,11 +755,7 @@ function Index() {
                     onClick={() => setTypeFilter(t.value)}
                   >
                     {t.label}
-                    <span
-                      className={cn("ml-1", active ? "opacity-80" : "opacity-70")}
-                    >
-                      {count}
-                    </span>
+                    <span className={cn("ml-1", active ? "opacity-80" : "opacity-70")}>{count}</span>
                   </Button>
                 );
               })}
@@ -861,9 +766,7 @@ function Index() {
                 <ReferenceResultCard key={r.n} result={r} />
               ))}
               {filteredResults.length === 0 && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  No references match this filter.
-                </p>
+                <p className="py-8 text-center text-sm text-muted-foreground">No references match this filter.</p>
               )}
             </div>
           </div>
@@ -878,18 +781,10 @@ function Index() {
                   {STYLE_LABELS[formatStyle]} formatting
                 </span>
                 <span className="text-muted-foreground">·</span>
-                <span className="font-medium">
-                  {formatCounts.total} checked
-                </span>
-                <span className="text-emerald-600 dark:text-emerald-400">
-                  {formatCounts.green} perfect
-                </span>
-                <span className="text-amber-600 dark:text-amber-400">
-                  {formatCounts.yellow} need work
-                </span>
-                <span className="text-red-600 dark:text-red-400">
-                  {formatCounts.red} bad
-                </span>
+                <span className="font-medium">{formatCounts.total} checked</span>
+                <span className="text-emerald-600 dark:text-emerald-400">{formatCounts.green} perfect</span>
+                <span className="text-amber-600 dark:text-amber-400">{formatCounts.yellow} need work</span>
+                <span className="text-red-600 dark:text-red-400">{formatCounts.red} bad</span>
               </div>
               <Button variant="ghost" size="sm" onClick={clearFormat}>
                 <Trash2 className="h-4 w-4" />
@@ -898,24 +793,15 @@ function Index() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
-                Element type:
-              </span>
-              {(
-                [
-                  { value: "all" as ElementFilter, label: "All types" },
-                  ...(Object.keys(ELEMENT_TYPE_LABELS) as ElementType[]).map(
-                    (k) => ({
-                      value: k as ElementFilter,
-                      label: ELEMENT_TYPE_LABELS[k],
-                    }),
-                  ),
-                ]
-              ).map((t) => {
-                const count =
-                  t.value === "all"
-                    ? formatCounts.total
-                    : elementCounts[t.value] ?? 0;
+              <span className="text-xs font-medium text-muted-foreground">Element type:</span>
+              {[
+                { value: "all" as ElementFilter, label: "All types" },
+                ...(Object.keys(ELEMENT_TYPE_LABELS) as ElementType[]).map((k) => ({
+                  value: k as ElementFilter,
+                  label: ELEMENT_TYPE_LABELS[k],
+                })),
+              ].map((t) => {
+                const count = t.value === "all" ? formatCounts.total : (elementCounts[t.value] ?? 0);
                 if (t.value !== "all" && count === 0) return null;
                 const active = elementFilter === t.value;
                 return (
@@ -926,11 +812,7 @@ function Index() {
                     onClick={() => setElementFilter(t.value)}
                   >
                     {t.label}
-                    <span
-                      className={cn("ml-1", active ? "opacity-80" : "opacity-70")}
-                    >
-                      {count}
-                    </span>
+                    <span className={cn("ml-1", active ? "opacity-80" : "opacity-70")}>{count}</span>
                   </Button>
                 );
               })}
@@ -941,16 +823,11 @@ function Index() {
                 <FormatResultCard key={r.n} result={r} />
               ))}
               {formatResults?.length === 0 && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  No references found in the text.
-                </p>
+                <p className="py-8 text-center text-sm text-muted-foreground">No references found in the text.</p>
               )}
-              {(formatResults?.length ?? 0) > 0 &&
-                filteredFormatResults.length === 0 && (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    No references match this filter.
-                  </p>
-                )}
+              {(formatResults?.length ?? 0) > 0 && filteredFormatResults.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">No references match this filter.</p>
+              )}
             </div>
           </div>
         )}
@@ -968,79 +845,54 @@ function Index() {
               How it works — what happens behind the scenes
             </span>
             <ChevronDown
-              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
-                showHow ? "rotate-180" : ""
-              }`}
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${showHow ? "rotate-180" : ""}`}
             />
           </button>
           {showHow && (
-            <div
-              id="how-it-works"
-              className="space-y-4 pb-4 text-sm text-muted-foreground"
-            >
+            <div id="how-it-works" className="space-y-4 pb-4 text-sm text-muted-foreground">
               {activeView === "format" ? (
                 <>
                   <p>
-                    The formatting checker compares each reference against the
-                    rules of the citation style you select. It is a heuristic,
-                    rule-based check — it does{" "}
-                    <span className="font-medium">not use any AI</span> or large
-                    language model, so it can miss nuances and may not be very
-                    accurate. Treat the results as a helpful guide rather than a
-                    definitive verdict.
+                    The formatting checker compares each reference against the rules of the citation style you select.
+                    It is a heuristic, rule-based check — it does <span className="font-medium">not use any AI</span> or
+                    large language model, so it can miss nuances and may not be very accurate. Treat the results as a
+                    helpful guide rather than a definitive verdict.
                   </p>
 
                   <div>
                     <h3 className="font-medium text-foreground">1. Parsing</h3>
                     <p>
-                      Your pasted text is split into individual references. The
-                      parser looks for author names, years, titles, journal
-                      names, volume / issue numbers, page ranges and URLs.
+                      Your pasted text is split into individual references. The parser looks for author names, years,
+                      titles, journal names, volume / issue numbers, page ranges and URLs.
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-foreground">
-                      2. Rule checking
-                    </h3>
+                    <h3 className="font-medium text-foreground">2. Rule checking</h3>
                     <p>
-                      Each reference is scored against the style you chose (e.g.
-                      APA 7th, MLA 9th, Harvard, Chicago 17th). Typical checks
-                      include:
+                      Each reference is scored against the style you chose (e.g. APA 7th, MLA 9th, Harvard, Chicago
+                      17th). Typical checks include:
                     </p>
                     <ul className="ml-4 mt-1 list-disc space-y-1">
                       <li>
-                        <span className="font-medium text-foreground">
-                          Author formatting
-                        </span>{" "}
-                        — order, initials and punctuation between names.
+                        <span className="font-medium text-foreground">Author formatting</span> — order, initials and
+                        punctuation between names.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Year placement
-                        </span>{" "}
-                        — inside parentheses or inline, depending on the style.
+                        <span className="font-medium text-foreground">Year placement</span> — inside parentheses or
+                        inline, depending on the style.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Title casing
-                        </span>{" "}
-                        — sentence case vs. title case (italics rules are noted
-                        but not visible in pasted plain text).
+                        <span className="font-medium text-foreground">Title casing</span> — sentence case vs. title case
+                        (italics rules are noted but not visible in pasted plain text).
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Source details
-                        </span>{" "}
-                        — journal / publisher, volume, issue, page range and DOI
-                        formatting.
+                        <span className="font-medium text-foreground">Source details</span> — journal / publisher,
+                        volume, issue, page range and DOI formatting.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Punctuation
-                        </span>{" "}
-                        — periods, commas, colons and ampersands in the right
-                        positions.
+                        <span className="font-medium text-foreground">Punctuation</span> — periods, commas, colons and
+                        ampersands in the right positions.
                       </li>
                     </ul>
                   </div>
@@ -1049,168 +901,117 @@ function Index() {
                     <h3 className="font-medium text-foreground">3. Grading</h3>
                     <ul className="ml-4 mt-1 list-disc space-y-1">
                       <li>
-                        <span className="font-medium text-foreground">
-                          Perfect (green)
-                        </span>{" "}
-                        — the reference follows most of the style rules.
+                        <span className="font-medium text-foreground">Perfect (green)</span> — the reference follows
+                        most of the style rules.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Needs work (yellow)
-                        </span>{" "}
-                        — elements are present but out of order or missing minor
-                        punctuation.
+                        <span className="font-medium text-foreground">Needs work (yellow)</span> — elements are present
+                        but out of order or missing minor punctuation.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Bad (red)
-                        </span>{" "}
-                        — major components are missing or the structure doesn't
-                        match the selected style.
+                        <span className="font-medium text-foreground">Bad (red)</span> — major components are missing or
+                        the structure doesn't match the selected style.
                       </li>
                     </ul>
                   </div>
 
                   <p className="text-xs">
-                    Because this check is rule-based and can't see formatting
-                    such as italics or hanging indents in pasted plain text, the
-                    results are approximate — always compare against the official
-                    style manual.
+                    Because this check is rule-based and can't see formatting such as italics or hanging indents in
+                    pasted plain text, the results are approximate — always compare against the official style manual.
                   </p>
                 </>
               ) : (
                 <>
                   <p>
-                    This tool tries to detect references that may have been
-                    fabricated or that point to dead links. Nothing is stored on
-                    a server — each reference is checked live against public
-                    databases when you press{" "}
-                    <span className="font-medium">Verify authenticity</span>.
+                    This tool tries to detect references that may have been fabricated or that point to dead links.
+                    Nothing is stored on a server — each reference is checked live against public databases when you
+                    press <span className="font-medium">Verify authenticity</span>.
                   </p>
 
                   <div>
                     <h3 className="font-medium text-foreground">1. Parsing</h3>
                     <p>
-                      Your pasted text — or the text extracted from an uploaded{" "}
-                      <code>.txt</code>, <code>.docx</code> or <code>.pdf</code> —
-                      is split into individual references. For uploaded documents,
-                      only the{" "}
-                      <span className="font-medium">
-                        References / Bibliography
-                      </span>{" "}
-                      section at the end of the document is used.
+                      Your pasted text — or the text extracted from an uploaded <code>.txt</code>, <code>.docx</code> or{" "}
+                      <code>.pdf</code> — is split into individual references. For uploaded documents, only the{" "}
+                      <span className="font-medium">References / Bibliography</span> section at the end of the document
+                      is used.
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-foreground">
-                      2. Classification
-                    </h3>
-                    <p>
-                      Each entry is sorted into one of three types based on what
-                      it contains:
-                    </p>
+                    <h3 className="font-medium text-foreground">2. Classification</h3>
+                    <p>Each entry is sorted into one of three types based on what it contains:</p>
                     <ul className="ml-4 mt-1 list-disc space-y-1">
                       <li>
-                        <span className="font-medium text-foreground">
-                          Academic
-                        </span>{" "}
-                        — has a DOI or links to a scholarly source (e.g. arXiv).
+                        <span className="font-medium text-foreground">Academic</span> — has a DOI or links to a
+                        scholarly source (e.g. arXiv).
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">Web</span> —
-                        a regular website link with no DOI.
+                        <span className="font-medium text-foreground">Web</span> — a regular website link with no DOI.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Offline
-                        </span>{" "}
-                        — e.g. a printed book, with no link to verify.
+                        <span className="font-medium text-foreground">Offline</span> — e.g. a printed book, with no link
+                        to verify.
                       </li>
                     </ul>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-foreground">
-                      3. Verification
-                    </h3>
+                    <h3 className="font-medium text-foreground">3. Verification</h3>
                     <ul className="ml-4 mt-1 list-disc space-y-1">
                       <li>
-                        <span className="font-medium text-foreground">
-                          Academic:
-                        </span>{" "}
-                        the DOI is resolved first (CrossRef, then OpenAlex). If
-                        there is no DOI, the title is searched across{" "}
-                        <span className="font-medium">
-                          CrossRef, OpenAlex, Semantic Scholar, arXiv and DBLP
-                        </span>
-                        . A title-similarity score then decides whether it is a
-                        confident match.
+                        <span className="font-medium text-foreground">Academic:</span> the DOI is resolved first
+                        (CrossRef, then OpenAlex). If there is no DOI, the title is searched across{" "}
+                        <span className="font-medium">CrossRef, OpenAlex, Semantic Scholar, arXiv and DBLP</span>. A
+                        title-similarity score then decides whether it is a confident match.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">Web:</span>{" "}
-                        the link is fetched to confirm it is live (HTTP status).
-                        Dead links are looked up in the{" "}
-                        <span className="font-medium">
-                          Internet Archive (Wayback)
-                        </span>{" "}
-                        to see if a snapshot ever existed.
+                        <span className="font-medium text-foreground">Web:</span> the link is fetched to confirm it is
+                        live (HTTP status). Dead links are looked up in the{" "}
+                        <span className="font-medium">Internet Archive (Wayback)</span> to see if a snapshot ever
+                        existed.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Offline:
-                        </span>{" "}
-                        flagged as not automatically verifiable.
+                        <span className="font-medium text-foreground">Offline:</span> flagged as not automatically
+                        verifiable.
                       </li>
                     </ul>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-foreground">
-                      Verdict legend
-                    </h3>
+                    <h3 className="font-medium text-foreground">Verdict legend</h3>
                     <ul className="ml-4 mt-1 list-disc space-y-1">
                       <li>
-                        <span className="font-medium text-foreground">Real</span>{" "}
-                        — confidently matched in a database or a live link.
+                        <span className="font-medium text-foreground">Real</span> — confidently matched in a database or
+                        a live link.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">Check</span>{" "}
-                        — needs a manual look: a partial title match, a live page
-                        that looks outdated, or a link that responds but blocks
-                        automated verification.
+                        <span className="font-medium text-foreground">Check</span> — needs a manual look: a partial
+                        title match, a live page that looks outdated, or a link that responds but blocks automated
+                        verification.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          No trace
-                        </span>{" "}
-                        — unreachable and never archived; possibly fabricated.
+                        <span className="font-medium text-foreground">No trace</span> — unreachable and never archived;
+                        possibly fabricated.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Archived
-                        </span>{" "}
-                        — the live link is dead, but an Internet Archive snapshot
-                        exists.
+                        <span className="font-medium text-foreground">Archived</span> — the live link is dead, but an
+                        Internet Archive snapshot exists.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Offline
-                        </span>{" "}
-                        — a source (e.g. a book) that cannot be auto-verified.
+                        <span className="font-medium text-foreground">Offline</span> — a source (e.g. a book) that
+                        cannot be auto-verified.
                       </li>
                       <li>
-                        <span className="font-medium text-foreground">
-                          Inconclusive
-                        </span>{" "}
-                        — the checks could not reach a clear answer.
+                        <span className="font-medium text-foreground">Inconclusive</span> — the checks could not reach a
+                        clear answer.
                       </li>
                     </ul>
                   </div>
 
                   <p className="text-xs">
-                    Results are heuristic and can occasionally be wrong — always
-                    double-check anything flagged before acting on it.
+                    Results are heuristic and can occasionally be wrong — always double-check anything flagged before
+                    acting on it.
                   </p>
                 </>
               )}
@@ -1231,21 +1032,15 @@ function Index() {
               About &amp; credits
             </span>
             <ChevronDown
-              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
-                showAbout ? "rotate-180" : ""
-              }`}
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${showAbout ? "rotate-180" : ""}`}
             />
           </button>
           {showAbout && (
-            <div
-              id="about-credits"
-              className="space-y-4 pb-4 text-sm text-muted-foreground"
-            >
+            <div id="about-credits" className="space-y-4 pb-4 text-sm text-muted-foreground">
               <p>
-                Reference Checker helps you spot references that may have been
-                fabricated or that point to dead links. Every check runs live
-                against public databases and the open web — nothing you paste or
-                upload is stored on a server.
+                Reference Checker helps you spot references that may have been fabricated or that point to dead links.
+                Every check runs live against public databases and the open web — nothing you paste or upload is stored
+                on a server.
               </p>
 
               <div>
@@ -1264,8 +1059,7 @@ function Index() {
                     .
                   </li>
                   <li>
-                    The web-page liveness and Internet Archive (Wayback) checking
-                    is an original creation by the author.
+                    The web-page liveness and Internet Archive (Wayback) checking is an original creation by the author.
                   </li>
                 </ul>
               </div>
@@ -1300,10 +1094,8 @@ function Index() {
             Sebastian Bernal Garcia
           </a>{" "}
           · MIT License · 2026
-          <br />
-          v{VERSION} · Updated {BUILD_DATE}
+          <br />v{VERSION} · Updated {BUILD_DATE}
         </footer>
-
       </main>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-4">
