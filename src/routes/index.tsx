@@ -24,6 +24,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { FormatResultCard } from "@/components/FormatResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
@@ -619,18 +625,28 @@ function Index() {
                 handleFile(file, setText);
               }}
             >
-              <Textarea
-                id="refs"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder={
-                  "Paste your references here, or drag & drop a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work."
-                }
-                className={cn(
-                  "min-h-48 font-mono text-sm",
-                  dragging && "ring-2 ring-primary ring-offset-2",
-                )}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Textarea
+                      id="refs"
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder={
+                        "Paste your references here, or drag & drop a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work."
+                      }
+                      className={cn(
+                        "min-h-48 font-mono text-sm",
+                        dragging && "ring-2 ring-primary ring-offset-2",
+                      )}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center">
+                    💡 For best results, upload the original PDF or Word file.
+                    Copying and pasting can corrupt links and formatting.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {dragging && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-primary">
                   <span className="flex items-center gap-2">
@@ -645,10 +661,6 @@ function Index() {
               Supports .txt, .docx and .pdf uploads · up to 100 references.
             </p>
 
-            <p className="mt-2 text-xs text-muted-foreground">
-              💡 For best results, upload the original PDF or Word file.
-              Copying and pasting can corrupt links and formatting.
-            </p>
 
             <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
