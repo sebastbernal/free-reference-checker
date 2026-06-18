@@ -625,18 +625,28 @@ function Index() {
                 handleFile(file, setText);
               }}
             >
-              <Textarea
-                id="refs"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder={
-                  "Paste your references here, or drag & drop a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work."
-                }
-                className={cn(
-                  "min-h-48 font-mono text-sm",
-                  dragging && "ring-2 ring-primary ring-offset-2",
-                )}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Textarea
+                      id="refs"
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder={
+                        "Paste your references here, or drag & drop a .txt, .docx or .pdf file.\n\nAPA, MLA, Harvard, Chicago, numbered or plain text all work."
+                      }
+                      className={cn(
+                        "min-h-48 font-mono text-sm",
+                        dragging && "ring-2 ring-primary ring-offset-2",
+                      )}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center">
+                    💡 For best results, upload the original PDF or Word file.
+                    Copying and pasting can corrupt links and formatting.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {dragging && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-primary">
                   <span className="flex items-center gap-2">
