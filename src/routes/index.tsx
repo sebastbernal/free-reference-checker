@@ -523,7 +523,7 @@ function Index() {
           </div>
 
           <h1 className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-snug text-foreground/80 sm:text-xl">
-            Check reference authenticity and citation format for free.
+            THE GOLD STANDARD FOR ACADEMIC INTEGRITY
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
