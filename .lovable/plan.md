@@ -1,26 +1,21 @@
-Fix reference classification so journal articles without a DOI or URL are verified by title instead of being marked "offline".
+## Add manual-search buttons to failed reference verifications
 
-**What changes:**
-1. Add a `looksLikeJournalArticle(ref: string): boolean` helper just above the `extract()` function (around line 100). It detects journal signals:
-   - volume(issue) pattern, e.g. "397(10269)"
-   - page range pattern, e.g. "129–170"
-   - "et al."/ellipsis together with a (year)
-   - recognizable journal-venue words (Journal, Annals, Review, Lancet, Nature, etc.)
+Three small, display-only changes — no verification logic is altered.
 
-2. In the `extract()` function, change the final classification branch from:
-   ```
-   if (doi) kind = "academic";
-   else if (url && !isDoiUrl) kind = "web";
-   else if (url && isDoiUrl) kind = "academic";
-   else kind = "offline";
-   ```
-   to:
-   ```
-   if (doi) kind = "academic";
-   else if (url && !isDoiUrl) kind = "web";
-   else if (url && isDoiUrl) kind = "academic";
-   else if (looksLikeJournalArticle(ref)) kind = "academic"; // no link, but a journal article → verify by title
-   else kind = "offline";
-   ```
+### 1. Create `src/lib/search-links.ts`
+New utility that builds Google Scholar, Google Books, and Google search URLs from a reference string and its cited title. Pure URL construction, no API calls.
 
-**Why:** A real journal article that has neither a DOI nor a URL currently falls into the final `else` branch and is classified "offline", which skips the CrossRef/OpenAlex/Semantic Scholar title search entirely and reports "no online trace" — a false red flag. Books and webpages will still classify correctly. The academic branch already does title search when there's no DOI, so routing these references to "academic" is enough to get them verified.
+### 2. Add imports to `src/components/ReferenceResultCard.tsx`
+Import `buildSearchLinks` from the new utility and the `Search` icon from `lucide-react`.
+
+### 3. Insert button block inside `ReferenceResultCard`
+Immediately after the closing `</dl>` and before the closing `</CardContent>`, render a row of three search links (Google Scholar, Google Books, Google) when the verdict is one of: `check`, `no-trace`, `offline`, or `inconclusive`. Each link opens in a new tab. Real and archived verdicts never show these buttons.
+
+### Files touched
+- `src/lib/search-links.ts` — new file
+- `src/components/ReferenceResultCard.tsx` — imports + JSX insertion
+
+### No changes to
+- Verification algorithms
+- Verdict types
+- Any other component behavior
