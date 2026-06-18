@@ -161,6 +161,29 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
               </div>
             )}
           </dl>
+
+          {["check", "no-trace", "offline", "inconclusive"].includes(result.verdict) && (() => {
+            const links = buildSearchLinks(result.reference, result.citedTitle);
+            const btn =
+              "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground/80 hover:bg-muted hover:text-foreground transition-colors no-underline";
+            return (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <Search className="h-3.5 w-3.5" />
+                  Couldn't auto-verify — search manually:
+                </span>
+                <a href={links.scholar} target="_blank" rel="noreferrer" className={btn}>
+                  Google Scholar
+                </a>
+                <a href={links.books} target="_blank" rel="noreferrer" className={btn}>
+                  Google Books
+                </a>
+                <a href={links.google} target="_blank" rel="noreferrer" className={btn}>
+                  Google
+                </a>
+              </div>
+            );
+          })()}
         </CardContent>
       </div>
     </Card>
