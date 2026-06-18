@@ -36,13 +36,20 @@ export interface FormatIssue {
   severity: "minor" | "major";
 }
 
+// A run of template text; `italic` parts are rendered in <em> so the generic
+// "ideal" template can show style-correct italics (journal names, book titles…).
+export interface IdealSegment {
+  text: string;
+  italic?: boolean;
+}
+
 export interface FormatResult {
   n: number;
   reference: string;
   style: CitationStyle;
   grade: Grade;
   elementType: ElementType;
-  ideal: string;
+  ideal: IdealSegment[];
   issues: FormatIssue[];
 }
 
@@ -166,48 +173,120 @@ function gradeFromIssues(issues: FormatIssue[]): Grade {
   return "green";
 }
 
-// Best-effort "ideal" reconstruction. Approximate — communicates the target
-// structure rather than guaranteeing a byte-perfect citation.
-function buildIdeal(p: Parts, style: CitationStyle): string {
-  const authors = p.authors || "Author, A. A.";
-  const year = p.year || "Year";
-  const title = p.title || "Title of the work";
-  const doiUrl = p.doi
-    ? `https://doi.org/${p.doi}`
-    : p.url || "";
+// Generic, style-correct citation template for a given element type. Instead of
+// rebuilding the user's actual reference, this shows the *shape* a correct
+// citation should take, using placeholder words (Author name, A.A.; Year;
+// Title; Volume; URL; …). `*…*` marks italic runs (journal names, book titles).
+//
+// Element types where an organization can stand in for a personal author show
+// both options ("Author name, A.A. —or— Corporate Author").
+const CORPORATE_AUTHOR_TYPES = new Set<ElementType>([
+  "website",
+  "report",
+  "book",
+  "book-chapter",
+  "journal-article",
+  "other",
+]);
 
-  // Normalize the author string to end with a single period (names and
-  // initials should terminate with one), then let each style add its own
-  // separators — avoids "Doe, A" and "A.." artifacts.
-  const withConnector = (preferred: "&" | "and") => {
-    const base =
-      p.connector === "none"
-        ? authors
-        : authors.replace(
-            preferred === "&" ? /\s+and\s+/i : /\s+&\s+/,
-            ` ${preferred} `,
-          );
-    return base.replace(/[\s.,]+$/, "") + ".";
-  };
-
-  switch (style) {
-    case "apa7": {
-      const a = withConnector("&");
-      return `${a} (${year}). ${title}.${doiUrl ? ` ${doiUrl}` : ""}`.trim();
-    }
-    case "harvard": {
-      const a = withConnector("&");
-      return `${a} (${year}) ${title}.${doiUrl ? ` Available at: ${doiUrl}` : ""}`.trim();
-    }
-    case "mla9": {
-      const a = withConnector("and");
-      return `${a} "${title}." ${year}${doiUrl ? `, ${doiUrl}` : ""}.`.trim();
-    }
-    case "chicago17": {
-      const a = withConnector("and");
-      return `${a} ${year}. "${title}."${doiUrl ? ` ${doiUrl}.` : ""}`.trim();
-    }
+// Convert a tagged template string (with `*italic*` runs) into segments.
+function toSegments(template: string): IdealSegment[] {
+  const segments: IdealSegment[] = [];
+  const parts = template.split("*");
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i] === "") continue;
+    segments.push(i % 2 === 1 ? { text: parts[i], italic: true } : { text: parts[i] });
   }
+  return segments;
+}
+
+// Author placeholder for the given style + element type. APA/Harvard use
+// initials ("A.A."); MLA/Chicago use full first names. A corporate-author
+// option is appended where that norm applies.
+function authorPlaceholder(style: CitationStyle, type: ElementType): string {
+  const useInitials = style === "apa7" || style === "harvard";
+  const personal = useInitials ? "Author name, A.A." : "Author name, First Middle";
+  return CORPORATE_AUTHOR_TYPES.has(type)
+    ? `${personal} —or— Corporate Author`
+    : personal;
+}
+
+const APA_TEMPLATES: Record<ElementType, string> = {
+  "journal-article":
+    "{A}. (Year). Title of article. *Journal Name*, *Volume*(Issue), pages. https://doi.org/xxxxx",
+  "conference-paper":
+    "{A}. (Year, Month Day–Day). Title of paper [Paper presentation]. *Conference Name*, Location. URL",
+  book: "{A}. (Year). *Title of book* (Edition). Publisher.",
+  "book-chapter":
+    "{A}. (Year). Title of chapter. In E. E. Editor (Ed.), *Title of book* (Edition, pp. pages). Publisher.",
+  report: "{A}. (Year). *Title of report* (Report No. xxx). Publisher. URL",
+  website: "{A}. (Year, Month Day). *Title of page*. Site Name. URL",
+  thesis:
+    "{A}. (Year). *Title of thesis* [Doctoral dissertation, Institution]. Database/Archive. URL",
+  other: "{A}. (Year). *Title of work*. Source. URL",
+};
+
+const HARVARD_TEMPLATES: Record<ElementType, string> = {
+  "journal-article":
+    "{A}. (Year) 'Title of article', *Journal Name*, Volume(Issue), pp. pages. Available at: https://doi.org/xxxxx",
+  "conference-paper":
+    "{A}. (Year) 'Title of paper', *Conference Name*. Location, DD Month YYYY. Available at: URL",
+  book: "{A}. (Year) *Title of book*. Edition. Place: Publisher.",
+  "book-chapter":
+    "{A}. (Year) 'Title of chapter', in E. Editor (ed.) *Title of book*. Place: Publisher, pp. pages.",
+  report:
+    "{A}. (Year) *Title of report*. Report No. xxx. Place: Publisher. Available at: URL",
+  website:
+    "{A}. (Year) *Title of page*. Available at: URL (Accessed: DD Month YYYY).",
+  thesis: "{A}. (Year) *Title of thesis*. Level. Institution. Available at: URL",
+  other: "{A}. (Year) *Title of work*. Available at: URL (Accessed: DD Month YYYY).",
+};
+
+const MLA_TEMPLATES: Record<ElementType, string> = {
+  "journal-article":
+    '{A}. "Title of Article." *Journal Name*, vol. Volume, no. Issue, Year, pp. pages. URL.',
+  "conference-paper":
+    '{A}. "Title of Paper." *Conference Name*, DD Month YYYY, Location. URL.',
+  book: "{A}. *Title of Book*. Edition, Publisher, Year.",
+  "book-chapter":
+    '{A}. "Title of Chapter." *Title of Book*, edited by First Middle Editor, Publisher, Year, pp. pages.',
+  report: "{A}. *Title of Report*. Publisher, Year. URL.",
+  website:
+    '{A}. "Title of Page." *Site Name*, DD Month YYYY, URL. Accessed DD Month YYYY.',
+  thesis:
+    "{A}. *Title of Thesis*. Year. Institution, PhD dissertation.",
+  other: '{A}. "Title of Work." *Source*, Year, URL.',
+};
+
+const CHICAGO_TEMPLATES: Record<ElementType, string> = {
+  "journal-article":
+    '{A}. "Title of Article." *Journal Name* Volume, no. Issue (Year): pages. https://doi.org/xxxxx.',
+  "conference-paper":
+    '{A}. "Title of Paper." Paper presented at *Conference Name*, Location, DD Month YYYY.',
+  book: "{A}. *Title of Book*. Edition. Place: Publisher, Year.",
+  "book-chapter":
+    '{A}. "Title of Chapter." In *Title of Book*, edited by First Middle Editor, pages. Place: Publisher, Year.',
+  report:
+    "{A}. *Title of Report*. Report No. xxx. Place: Publisher, Year. URL.",
+  website:
+    '{A}. "Title of Page." Site Name. Year. Accessed DD Month YYYY. URL.',
+  thesis: '{A}. "Title of Thesis." PhD diss., Institution, Year.',
+  other: '{A}. "Title of Work." Source. Year. URL.',
+};
+
+const TEMPLATES: Record<CitationStyle, Record<ElementType, string>> = {
+  apa7: APA_TEMPLATES,
+  harvard: HARVARD_TEMPLATES,
+  mla9: MLA_TEMPLATES,
+  chicago17: CHICAGO_TEMPLATES,
+};
+
+function buildIdealTemplate(style: CitationStyle, type: ElementType): IdealSegment[] {
+  const template = TEMPLATES[style][type].replace(
+    "{A}",
+    authorPlaceholder(style, type),
+  );
+  return toSegments(template);
 }
 
 function commonIssues(p: Parts, ref: string): FormatIssue[] {
@@ -312,13 +391,14 @@ function checkOne(n: number, ref: string, style: CitationStyle): FormatResult {
     }
   }
 
+  const elementType = detectElementType(ref);
   return {
     n,
     reference: ref,
     style,
     grade: gradeFromIssues(issues),
-    elementType: detectElementType(ref),
-    ideal: buildIdeal(p, style),
+    elementType,
+    ideal: buildIdealTemplate(style, elementType),
     issues,
   };
 }
