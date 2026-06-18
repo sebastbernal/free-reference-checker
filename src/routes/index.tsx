@@ -516,7 +516,7 @@ function Index() {
           </div>
 
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            Reference authenticity &amp; citation format
+
           </p>
           <div className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Free Reference Checker
