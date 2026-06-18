@@ -39,13 +39,11 @@ import {
 } from "@/lib/format-check";
 
 const STORAGE_KEY = "reference-checker-state";
+// Bump whenever the persisted shape changes so incompatible old data is dropped
+// instead of restored (e.g. FormatResult.ideal: string -> IdealSegment[]).
+const STORAGE_VERSION = 2;
 
 const VERSION = "1.0.0";
-const BUILD_DATE = new Date().toLocaleDateString("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
 
 type Filter = Verdict | "all";
 
