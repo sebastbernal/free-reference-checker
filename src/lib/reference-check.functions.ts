@@ -97,6 +97,21 @@ function detectAiTrace(ref: string): string {
   return "";
 }
 
+// A reference with no DOI and no URL may still be a journal article (students
+// often omit the DOI). Detect journal signals so these are verified by title
+// search rather than written off as "offline". Books/reports lack these.
+function looksLikeJournalArticle(ref: string): boolean {
+  // volume(issue), e.g. "397(10269)", "12(8)", "188(5)"
+  if (/\b\d{1,4}\s*\(\d{1,5}\)/.test(ref)) return true;
+  // page range, e.g. "129–170", "129-170", "pp. 866–872", "e27–e35"
+  if (/\b(pp?\.\s*)?[A-Za-z]?\d{1,5}\s*[–-]\s*[A-Za-z]?\d{1,5}\b/.test(ref)) return true;
+  // ellipsis/"et al." multi-author list together with a (year)
+  if (/\bet al\.|…|\.\.\./.test(ref) && /\((?:19|20)\d{2}[a-z]?\)/.test(ref)) return true;
+  // a recognizable journal-venue word
+  if (/\b(Journal|Annals|Review|Proceedings|Lancet|BMJ|Nature|Science|Quarterly|Bulletin|Medicine)\b/.test(ref)) return true;
+  return false;
+}
+
 function extract(ref: string): {
   kind: "academic" | "web" | "offline";
   doi: string;
@@ -112,6 +127,7 @@ function extract(ref: string): {
   if (doi) kind = "academic";
   else if (url && !isDoiUrl) kind = "web";
   else if (url && isDoiUrl) kind = "academic";
+  else if (looksLikeJournalArticle(ref)) kind = "academic"; // no link, but a journal article → verify by title
   else kind = "offline";
   return { kind, doi, url };
 }
