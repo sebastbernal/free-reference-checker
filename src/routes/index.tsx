@@ -218,6 +218,8 @@ function Index() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  // Computed after mount only — avoids SSR/client date mismatch at midnight.
+  const [buildDate, setBuildDate] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyResultsRef = useRef<HTMLDivElement>(null);
   const formatResultsRef = useRef<HTMLDivElement>(null);
