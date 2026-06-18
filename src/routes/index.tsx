@@ -516,14 +516,14 @@ function Index() {
           </div>
 
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            Reference authenticity &amp; citation format
+
           </p>
           <div className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Free Reference Checker
           </div>
 
           <h1 className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-snug text-foreground/80 sm:text-xl">
-            Check reference authenticity and citation format for free.
+            THE GOLD STANDARD FOR ACADEMIC INTEGRITY
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
