@@ -24,6 +24,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ReferenceResultCard } from "@/components/ReferenceResultCard";
 import { FormatResultCard } from "@/components/FormatResultCard";
 import { extractTextFromFile } from "@/lib/file-extract";
@@ -645,10 +651,6 @@ function Index() {
               Supports .txt, .docx and .pdf uploads · up to 100 references.
             </p>
 
-            <p className="mt-2 text-xs text-muted-foreground">
-              💡 For best results, upload the original PDF or Word file.
-              Copying and pasting can corrupt links and formatting.
-            </p>
 
             <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
