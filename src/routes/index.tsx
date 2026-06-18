@@ -207,6 +207,7 @@ function Index() {
   const [formatStep, setFormatStep] = useState<"idle" | "selecting" | "done">("idle");
   const [restored, setRestored] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [processing, setProcessing] = useState<string | null>(null);
   const [showHow, setShowHow] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -351,6 +352,7 @@ function Index() {
   };
 
   const handleFile = async (file: File, setter: (value: string) => void) => {
+    setProcessing(file.name);
     try {
       const extracted = await extractTextFromFile(file);
       if (!extracted.trim()) {
@@ -361,6 +363,8 @@ function Index() {
       toast.success(`Loaded ${file.name}`);
     } catch (e) {
       toast.error(`Failed to read file: ${(e as Error).message}`);
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -597,6 +601,20 @@ function Index() {
                     <Upload className="h-4 w-4" />
                     Drop file to upload
                   </span>
+                </div>
+              )}
+              {processing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-md border bg-background/95 px-6 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">Processing “{processing}”…</p>
+                    <p className="text-xs text-muted-foreground">
+                      Reading and extracting references — this only takes a moment.
+                    </p>
+                  </div>
+                  <div className="h-1.5 w-48 overflow-hidden rounded-full bg-primary/20">
+                    <div className="h-full w-1/3 animate-progress-indeterminate rounded-full bg-primary" />
+                  </div>
                 </div>
               )}
             </div>
