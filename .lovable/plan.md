@@ -1,30 +1,19 @@
-# Fix the preview crash
+## Summary
+Add a "Wayback Machine" button next to the existing "Open URL" button in the inconclusive auto-verification section for web references.
 
-The preview is crashing for two independent reasons, both visible in the logs.
+## Changes
 
-## Problem 1 — `result.ideal.map is not a function` (the hard crash)
+### `src/components/ReferenceResultCard.tsx`
+In the `result.type === "web" && result.url` branch (around line 165–181), insert a second button linking to `https://web.archive.org/web/*/{result.url}`.
 
-The page saves the whole formatting state — including `formatResults` — into `sessionStorage` and restores it on load (`src/routes/index.tsx`). Older sessions were saved when `result.ideal` was a plain **string**. After the recent change, `ideal` is an **array of segments** and `FormatResultCard` calls `result.ideal.map(...)`. When the app restores the old saved data, `ideal` is still a string, `.map` doesn't exist, and the component throws — taking down the whole page via the error boundary.
+- Use the existing `btn` class string for consistent styling.
+- Use the Archive icon (already imported from `lucide-react`) for the button.
+- Label: "Wayback Machine".
+- Behavior: `target="_blank" rel="noreferrer"`.
 
-**Fix:** add a schema version to the persisted state so incompatible old data is discarded instead of restored.
+### No other files changed.
 
-- In `src/routes/index.tsx`, add a `STORAGE_VERSION` constant.
-- When **writing** to `sessionStorage`, include `version: STORAGE_VERSION` in the saved object.
-- When **reading**, if `saved.version !== STORAGE_VERSION`, ignore the stored data entirely (and clear the key). This prevents this class of crash now and on any future shape change.
-
-## Problem 2 — Hydration mismatch on the footer date
-
-`BUILD_DATE = new Date().toLocaleDateString(...)` is computed at module load. The server and the browser evaluate it at slightly different moments / timezones, so around midnight the server renders `Jun 18, 2026` while the client renders `Jun 19, 2026`. React reports a hydration mismatch (`server rendered text didn't match the client`) and regenerates the tree, which destabilizes the page.
-
-**Fix:** stop rendering a runtime date during SSR.
-
-- Render the "Updated {date}" portion only after mount (e.g. hold the formatted date in state set inside a `useEffect`, showing nothing/`v{VERSION}` until then), so the server and first client render agree.
-
-## Out of scope
-
-No change to the citation templates, parsing, classification, or issue detection — only the persistence/versioning and the footer date rendering.
-
-## Technical notes
-
-- Files touched: `src/routes/index.tsx` only.
-- After the fix, also clears any already-corrupt `sessionStorage` from the current browser via the version check, so the user's existing broken session recovers on next load.
+## How to verify
+1. Trigger a reference check with a web URL that returns an inconclusive/check/no-trace verdict.
+2. Confirm both "Open URL" and "Wayback Machine" buttons appear side by side.
+3. Click "Wayback Machine" and confirm it opens `https://web.archive.org/web/*/{url}`.
