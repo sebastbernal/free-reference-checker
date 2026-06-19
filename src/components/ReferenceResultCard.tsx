@@ -177,6 +177,15 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
                     <Globe className="h-3.5 w-3.5" />
                     Open URL
                   </a>
+                  <a
+                    href={`https://web.archive.org/web/*/${result.url}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={btn}
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                    Wayback Machine
+                  </a>
                 </div>
               );
             }
