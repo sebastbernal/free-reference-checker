@@ -184,7 +184,7 @@ export function ReferenceResultCard({ result }: { result: ReferenceResult }) {
                     className={btn}
                   >
                     <Archive className="h-3.5 w-3.5" />
-                    Wayback Machine
+                    Internet Archive
                   </a>
                 </div>
               );
